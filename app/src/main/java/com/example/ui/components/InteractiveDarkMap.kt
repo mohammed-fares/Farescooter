@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -29,8 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -42,13 +39,9 @@ import androidx.compose.ui.unit.dp
 import com.example.model.ScooterLocation
 import com.example.model.TripOrder
 import com.example.model.TripStatus
-import com.example.ui.theme.FarasBlack
 import com.example.ui.theme.FarasNeonGreen
 import com.example.ui.theme.FarasNeonGreenGlow
-import com.example.ui.theme.FarasSurfaceDark
 import com.example.ui.theme.FarasWhite
-import kotlin.math.cos
-import kotlin.math.sin
 
 @Composable
 fun InteractiveDarkMap(
@@ -58,7 +51,6 @@ fun InteractiveDarkMap(
     modifier: Modifier = Modifier,
     onMapTapped: (Float, Float) -> Unit = { _, _ -> }
 ) {
-    // Pulse animation for neon scooter markers
     val infiniteTransition = rememberInfiniteTransition(label = "scooter_pulse")
     val pulseRadius by infiniteTransition.animateFloat(
         initialValue = 10f,
@@ -70,7 +62,7 @@ fun InteractiveDarkMap(
         label = "pulseRadius"
     )
     val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.7f,
+        initialValue = 0.6f,
         targetValue = 0f,
         animationSpec = infiniteRepeatable(
             animation = tween(1400, easing = FastOutSlowInEasing),
@@ -84,7 +76,7 @@ fun InteractiveDarkMap(
 
     Box(
         modifier = modifier
-            .background(FarasBlack)
+            .background(Color(0xFFF1F5F9))
             .pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consume()
@@ -94,7 +86,6 @@ fun InteractiveDarkMap(
             }
             .pointerInput(Unit) {
                 detectTapGestures { offset ->
-                    // Calculate normalized ratio
                     onMapTapped(offset.x, offset.y)
                 }
             }
@@ -103,10 +94,10 @@ fun InteractiveDarkMap(
             val width = size.width
             val height = size.height
 
-            // 1. Draw city blocks & dark background grid
-            drawDarkCityGrid(width, height, panOffsetX, panOffsetY)
+            // 1. Draw city grid with Cairo Nile River & clean white/grey layout
+            drawCairoCityGrid(width, height, panOffsetX, panOffsetY)
 
-            // 2. If trip active or destination selected, draw the neon route line
+            // 2. Route Line
             if (currentTrip != null) {
                 val startX = currentTrip.pickupXRatio * width + panOffsetX
                 val startY = currentTrip.pickupYRatio * height + panOffsetY
@@ -121,29 +112,22 @@ fun InteractiveDarkMap(
                     progress = if (currentTrip.status == TripStatus.IN_TRANSIT) captainProgressRatio else 0f
                 )
 
-                // Draw Pickup Marker
+                // Pickup Pin
                 drawPickupMarker(startX, startY, pulseRadius, pulseAlpha)
 
-                // Draw Destination Marker
+                // Destination Pin
                 drawDestinationMarker(endX, destY)
 
-                // If in transit or rider on the way, draw Captain scooter marker
+                // Active Captain Scooter Marker
                 if (currentTrip.status in listOf(TripStatus.ACCEPTED, TripStatus.ON_THE_WAY, TripStatus.ARRIVED_PICKUP, TripStatus.IN_TRANSIT)) {
                     val currentX = when (currentTrip.status) {
                         TripStatus.IN_TRANSIT -> startX + (endX - startX) * captainProgressRatio
-                        TripStatus.ON_THE_WAY -> {
-                            // Approaching pickup
-                            val approachX = startX - 120f * (1f - captainProgressRatio)
-                            approachX
-                        }
+                        TripStatus.ON_THE_WAY -> startX - 120f * (1f - captainProgressRatio)
                         else -> startX
                     }
                     val currentY = when (currentTrip.status) {
                         TripStatus.IN_TRANSIT -> startY + (destY - startY) * captainProgressRatio
-                        TripStatus.ON_THE_WAY -> {
-                            val approachY = startY - 140f * (1f - captainProgressRatio)
-                            approachY
-                        }
+                        TripStatus.ON_THE_WAY -> startY - 140f * (1f - captainProgressRatio)
                         else -> startY
                     }
 
@@ -151,17 +135,15 @@ fun InteractiveDarkMap(
                 }
             }
 
-            // 3. Draw nearby active scooters
+            // 3. Nearby active scooters
             nearbyScooters.forEach { scooter ->
                 val sx = scooter.xRatio * width + panOffsetX
                 val sy = scooter.yRatio * height + panOffsetY
 
-                // Don't draw if outside viewport
                 if (sx in -40f..(width + 40f) && sy in -40f..(height + 40f)) {
                     drawNeonScooterPin(
                         x = sx,
                         y = sy,
-                        heading = scooter.heading,
                         pulseRadius = pulseRadius,
                         pulseAlpha = pulseAlpha
                     )
@@ -169,15 +151,15 @@ fun InteractiveDarkMap(
             }
         }
 
-        // Map Control Floating Buttons (Reset Pan / Recenter)
+        // Center Location Button
         FloatingActionButton(
             onClick = {
                 panOffsetX = 0f
                 panOffsetY = 0f
             },
-            containerColor = FarasSurfaceDark,
+            containerColor = FarasWhite,
             contentColor = FarasNeonGreen,
-            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp),
             shape = CircleShape,
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -193,97 +175,96 @@ fun InteractiveDarkMap(
     }
 }
 
-private fun DrawScope.drawDarkCityGrid(width: Float, height: Float, panX: Float, panY: Float) {
-    // Base dark background
-    drawRect(color = Color(0xFF0D1015))
+private fun DrawScope.drawCairoCityGrid(width: Float, height: Float, panX: Float, panY: Float) {
+    // Light City Canvas
+    drawRect(color = Color(0xFFF6F8FB))
 
-    // Water body (e.g. Dubai Creek / waterfront area)
-    val waterPath = Path().apply {
-        moveTo(0f + panX * 0.5f, height * 0.18f + panY * 0.5f)
+    // Nile River Path (Meandering across Cairo)
+    val nilePath = Path().apply {
+        moveTo(width * 0.38f + panX * 0.5f, 0f + panY * 0.5f)
         cubicTo(
-            width * 0.35f + panX * 0.5f, height * 0.12f + panY * 0.5f,
-            width * 0.65f + panX * 0.5f, height * 0.28f + panY * 0.5f,
-            width + panX * 0.5f, height * 0.20f + panY * 0.5f
+            width * 0.32f + panX * 0.5f, height * 0.25f + panY * 0.5f,
+            width * 0.45f + panX * 0.5f, height * 0.55f + panY * 0.5f,
+            width * 0.36f + panX * 0.5f, height + panY * 0.5f
         )
-        lineTo(width + panX * 0.5f, height * 0.32f + panY * 0.5f)
+        lineTo(width * 0.48f + panX * 0.5f, height + panY * 0.5f)
         cubicTo(
-            width * 0.7f + panX * 0.5f, height * 0.38f + panY * 0.5f,
-            width * 0.3f + panX * 0.5f, height * 0.22f + panY * 0.5f,
-            0f + panX * 0.5f, height * 0.28f + panY * 0.5f
+            width * 0.55f + panX * 0.5f, height * 0.55f + panY * 0.5f,
+            width * 0.42f + panX * 0.5f, height * 0.25f + panY * 0.5f,
+            width * 0.48f + panX * 0.5f, 0f + panY * 0.5f
         )
         close()
     }
-    drawPath(
-        path = waterPath,
-        color = Color(0xFF111D2B)
-    )
+    drawPath(path = nilePath, color = Color(0xFFD6E4F5))
 
     // Minor streets grid
-    val minorRoadColor = Color(0xFF181D26)
-    val minorRoadStroke = 2.5f
-
+    val streetColor = Color(0xFFE2E8F0)
     for (x in -200..width.toInt() + 200 step 70) {
         drawLine(
-            color = minorRoadColor,
+            color = streetColor,
             start = Offset(x.toFloat() + panX, -200f + panY),
             end = Offset(x.toFloat() + panX, height + 200f + panY),
-            strokeWidth = minorRoadStroke
+            strokeWidth = 2f
         )
     }
 
     for (y in -200..height.toInt() + 200 step 70) {
         drawLine(
-            color = minorRoadColor,
+            color = streetColor,
             start = Offset(-200f + panX, y.toFloat() + panY),
             end = Offset(width + 200f + panX, y.toFloat() + panY),
-            strokeWidth = minorRoadStroke
+            strokeWidth = 2f
         )
     }
 
-    // Major Avenues (Arterial Highways with dark gray tint)
-    val majorRoadColor = Color(0xFF262F3E)
-    val highwayColor = Color(0xFF333F52)
+    // 6th October Bridge & Cairo Ring Road Highways (Major arteries)
+    val highwayOuterColor = Color(0xFFCBD5E1)
+    val highwayInnerColor = Color(0xFFFFFFFF)
 
-    // Highway diagonal
+    // 6th October Bridge (East-West diagonal connecting Zamalek & Tahrir)
     drawLine(
-        color = highwayColor,
-        start = Offset(-50f + panX, height * 0.85f + panY),
-        end = Offset(width + 50f + panX, height * 0.15f + panY),
+        color = highwayOuterColor,
+        start = Offset(-50f + panX, height * 0.48f + panY),
+        end = Offset(width + 50f + panX, height * 0.44f + panY),
         strokeWidth = 14f,
         cap = StrokeCap.Round
     )
-
-    // Inner highway glow center line
     drawLine(
-        color = Color(0xFF1E2530),
-        start = Offset(-50f + panX, height * 0.85f + panY),
-        end = Offset(width + 50f + panX, height * 0.15f + panY),
-        strokeWidth = 4f,
+        color = highwayInnerColor,
+        start = Offset(-50f + panX, height * 0.48f + panY),
+        end = Offset(width + 50f + panX, height * 0.44f + panY),
+        strokeWidth = 8f,
         cap = StrokeCap.Round
     )
 
-    // Horizontal major avenue
+    // 26th of July Mehwar
     drawLine(
-        color = majorRoadColor,
-        start = Offset(-50f + panX, height * 0.52f + panY),
-        end = Offset(width + 50f + panX, height * 0.52f + panY),
-        strokeWidth = 9f
+        color = highwayOuterColor,
+        start = Offset(-50f + panX, height * 0.22f + panY),
+        end = Offset(width + 50f + panX, height * 0.32f + panY),
+        strokeWidth = 12f,
+        cap = StrokeCap.Round
+    )
+    drawLine(
+        color = highwayInnerColor,
+        start = Offset(-50f + panX, height * 0.22f + panY),
+        end = Offset(width + 50f + panX, height * 0.32f + panY),
+        strokeWidth = 6f,
+        cap = StrokeCap.Round
     )
 
-    // Vertical major boulevard
+    // Corniche El Nil (Vertical Boulevard alongside the Nile)
     drawLine(
-        color = majorRoadColor,
-        start = Offset(width * 0.42f + panX, -50f + panY),
-        end = Offset(width * 0.42f + panX, height + 50f + panY),
-        strokeWidth = 9f
+        color = highwayOuterColor,
+        start = Offset(width * 0.49f + panX, -50f + panY),
+        end = Offset(width * 0.49f + panX, height + 50f + panY),
+        strokeWidth = 10f
     )
-
-    // Secondary boulevard
     drawLine(
-        color = majorRoadColor,
-        start = Offset(width * 0.78f + panX, -50f + panY),
-        end = Offset(width * 0.78f + panX, height + 50f + panY),
-        strokeWidth = 8f
+        color = highwayInnerColor,
+        start = Offset(width * 0.49f + panX, -50f + panY),
+        end = Offset(width * 0.49f + panX, height + 50f + panY),
+        strokeWidth = 5f
     )
 }
 
@@ -294,8 +275,7 @@ private fun DrawScope.drawGlowRoute(
     endY: Float,
     progress: Float
 ) {
-    // Waypoint curve
-    val midX = (startX + endX) / 2f + (endY - startY) * 0.2f
+    val midX = (startX + endX) / 2f + (endY - startY) * 0.18f
     val midY = (startY + endY) / 2f - (endX - startX) * 0.15f
 
     val routePath = Path().apply {
@@ -303,7 +283,7 @@ private fun DrawScope.drawGlowRoute(
         quadraticTo(midX, midY, endX, endY)
     }
 
-    // Outer Neon Glow
+    // Outer glow
     drawPath(
         path = routePath,
         color = FarasNeonGreenGlow,
@@ -314,7 +294,7 @@ private fun DrawScope.drawGlowRoute(
         )
     )
 
-    // Solid Neon Green Route Line
+    // Solid route line
     drawPath(
         path = routePath,
         color = FarasNeonGreen,
@@ -327,21 +307,16 @@ private fun DrawScope.drawGlowRoute(
 }
 
 private fun DrawScope.drawPickupMarker(x: Float, y: Float, pulseRadius: Float, pulseAlpha: Float) {
-    // Pulse halo
     drawCircle(
         color = FarasNeonGreen.copy(alpha = pulseAlpha),
         radius = pulseRadius + 8f,
         center = Offset(x, y)
     )
-
-    // Outer dark ring
     drawCircle(
-        color = FarasBlack,
+        color = Color(0xFF0F172A),
         radius = 11f,
         center = Offset(x, y)
     )
-
-    // Center Neon dot
     drawCircle(
         color = FarasNeonGreen,
         radius = 7f,
@@ -350,20 +325,19 @@ private fun DrawScope.drawPickupMarker(x: Float, y: Float, pulseRadius: Float, p
 }
 
 private fun DrawScope.drawDestinationMarker(x: Float, y: Float) {
-    // Square / flag pin for destination
     drawCircle(
-        color = FarasWhite.copy(alpha = 0.3f),
+        color = Color(0x330F172A),
         radius = 14f,
         center = Offset(x, y)
     )
     drawCircle(
-        color = FarasBlack,
-        radius = 10f,
+        color = Color(0xFF0F172A),
+        radius = 9f,
         center = Offset(x, y)
     )
     drawCircle(
         color = FarasWhite,
-        radius = 6f,
+        radius = 5f,
         center = Offset(x, y)
     )
 }
@@ -371,20 +345,17 @@ private fun DrawScope.drawDestinationMarker(x: Float, y: Float) {
 private fun DrawScope.drawNeonScooterPin(
     x: Float,
     y: Float,
-    heading: Float,
     pulseRadius: Float,
     pulseAlpha: Float
 ) {
-    // Subtle beacon glow
     drawCircle(
-        color = FarasNeonGreen.copy(alpha = pulseAlpha * 0.5f),
+        color = FarasNeonGreen.copy(alpha = pulseAlpha * 0.4f),
         radius = pulseRadius,
         center = Offset(x, y)
     )
-
-    // Badge circle background (Black pill/circle)
+    // Scooter Badge (White circular card with green border)
     drawCircle(
-        color = Color(0xFF141920),
+        color = FarasWhite,
         radius = 15f,
         center = Offset(x, y)
     )
@@ -395,43 +366,13 @@ private fun DrawScope.drawNeonScooterPin(
         style = Stroke(width = 2.5f)
     )
 
-    // Scooter icon silhouette (mini stylized wheels & handlebar)
-    val wheelRadius = 3f
+    // Mini stylized scooter glyph
     val baseGreen = FarasNeonGreen
-
-    // Back wheel
-    drawCircle(
-        color = baseGreen,
-        radius = wheelRadius,
-        center = Offset(x - 5.5f, y + 4f)
-    )
-    // Front wheel
-    drawCircle(
-        color = baseGreen,
-        radius = wheelRadius,
-        center = Offset(x + 5.5f, y + 4f)
-    )
-    // Deck
-    drawLine(
-        color = baseGreen,
-        start = Offset(x - 5.5f, y + 3.5f),
-        end = Offset(x + 4f, y + 3.5f),
-        strokeWidth = 2f
-    )
-    // Stem & handlebar
-    drawLine(
-        color = baseGreen,
-        start = Offset(x + 4f, y + 3.5f),
-        end = Offset(x + 2f, y - 5f),
-        strokeWidth = 2f
-    )
-    drawLine(
-        color = FarasWhite,
-        start = Offset(x - 0.5f, y - 5f),
-        end = Offset(x + 4.5f, y - 5f),
-        strokeWidth = 2f,
-        cap = StrokeCap.Round
-    )
+    drawCircle(color = baseGreen, radius = 3f, center = Offset(x - 5.5f, y + 4f))
+    drawCircle(color = baseGreen, radius = 3f, center = Offset(x + 5.5f, y + 4f))
+    drawLine(color = baseGreen, start = Offset(x - 5.5f, y + 3.5f), end = Offset(x + 4f, y + 3.5f), strokeWidth = 2f)
+    drawLine(color = baseGreen, start = Offset(x + 4f, y + 3.5f), end = Offset(x + 2f, y - 5f), strokeWidth = 2f)
+    drawLine(color = Color(0xFF0F172A), start = Offset(x - 0.5f, y - 5f), end = Offset(x + 4.5f, y - 5f), strokeWidth = 2f, cap = StrokeCap.Round)
 }
 
 private fun DrawScope.drawActiveCaptainScooter(
@@ -440,16 +381,13 @@ private fun DrawScope.drawActiveCaptainScooter(
     pulseRadius: Float,
     pulseAlpha: Float
 ) {
-    // Large prominent pulse
     drawCircle(
-        color = FarasNeonGreen.copy(alpha = pulseAlpha * 0.8f),
-        radius = pulseRadius + 14f,
+        color = FarasNeonGreen.copy(alpha = pulseAlpha * 0.7f),
+        radius = pulseRadius + 12f,
         center = Offset(x, y)
     )
-
-    // Main captain badge
     drawCircle(
-        color = FarasBlack,
+        color = Color(0xFF0F172A),
         radius = 20f,
         center = Offset(x, y)
     )
@@ -460,34 +398,10 @@ private fun DrawScope.drawActiveCaptainScooter(
         style = Stroke(width = 3.5f)
     )
 
-    // Scooter glyph in bright white & neon
-    drawCircle(
-        color = FarasWhite,
-        radius = 4f,
-        center = Offset(x - 7f, y + 5f)
-    )
-    drawCircle(
-        color = FarasWhite,
-        radius = 4f,
-        center = Offset(x + 7f, y + 5f)
-    )
-    drawLine(
-        color = FarasNeonGreen,
-        start = Offset(x - 7f, y + 4f),
-        end = Offset(x + 5f, y + 4f),
-        strokeWidth = 3f
-    )
-    drawLine(
-        color = FarasNeonGreen,
-        start = Offset(x + 5f, y + 4f),
-        end = Offset(x + 3f, y - 7f),
-        strokeWidth = 3f
-    )
-    drawLine(
-        color = FarasWhite,
-        start = Offset(x, y - 7f),
-        end = Offset(x + 6f, y - 7f),
-        strokeWidth = 3f,
-        cap = StrokeCap.Round
-    )
+    // Scooter icon in white
+    drawCircle(color = FarasWhite, radius = 4f, center = Offset(x - 7f, y + 5f))
+    drawCircle(color = FarasWhite, radius = 4f, center = Offset(x + 7f, y + 5f))
+    drawLine(color = FarasNeonGreen, start = Offset(x - 7f, y + 4f), end = Offset(x + 5f, y + 4f), strokeWidth = 3f)
+    drawLine(color = FarasNeonGreen, start = Offset(x + 5f, y + 4f), end = Offset(x + 3f, y - 7f), strokeWidth = 3f)
+    drawLine(color = FarasWhite, start = Offset(x, y - 7f), end = Offset(x + 6f, y - 7f), strokeWidth = 3f, cap = StrokeCap.Round)
 }

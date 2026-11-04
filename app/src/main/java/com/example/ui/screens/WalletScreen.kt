@@ -22,11 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,11 +39,13 @@ import androidx.compose.ui.unit.dp
 import com.example.data.AppLanguage
 import com.example.data.AppStrings
 import com.example.model.WalletTransaction
-import com.example.ui.theme.FarasBlack
-import com.example.ui.theme.FarasCardBg
 import com.example.ui.theme.FarasCardBorder
+import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
-import com.example.ui.theme.FarasSurfaceDark
+import com.example.ui.theme.FarasNeonGreenDark
+import com.example.ui.theme.FarasNeonGreenLight
+import com.example.ui.theme.FarasSurfaceVariant
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 import com.example.viewmodel.CustomerScreen
@@ -66,7 +65,7 @@ fun WalletScreen(
     }
 
     Surface(
-        color = FarasBlack,
+        color = FarasLightGreyBg,
         modifier = modifier.fillMaxSize()
     ) {
         Column(
@@ -86,7 +85,7 @@ fun WalletScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = FarasWhite
+                        tint = FarasTextPrimary
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -94,7 +93,7 @@ fun WalletScreen(
                     text = AppStrings.get("wallet", language),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = FarasWhite
+                    color = FarasTextPrimary
                 )
             }
 
@@ -105,8 +104,8 @@ fun WalletScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(24.dp))
-                    .background(FarasCardBg)
-                    .border(1.dp, FarasNeonGreen.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+                    .background(FarasWhite)
+                    .border(1.5.dp, FarasNeonGreen.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
                     .padding(24.dp)
             ) {
                 Column {
@@ -120,37 +119,44 @@ fun WalletScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = FarasTextSecondary
                         )
-                        Icon(
-                            imageVector = Icons.Default.AccountBalanceWallet,
-                            contentDescription = null,
-                            tint = FarasNeonGreen,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(FarasNeonGreenLight),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AccountBalanceWallet,
+                                contentDescription = null,
+                                tint = FarasNeonGreenDark,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             text = String.format(java.util.Locale.US, "%.1f", uiState.walletBalance),
                             style = MaterialTheme.typography.displayLarge,
                             fontWeight = FontWeight.Bold,
-                            color = FarasWhite
+                            color = FarasTextPrimary
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = AppStrings.get("currency", language),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = FarasNeonGreen
+                            color = FarasNeonGreenDark
                         )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Quick Top-up buttons
                     Text(
-                        text = if (language == AppLanguage.ARABIC) "شحن سريع بنقرة واحدة" else "Quick 1-Click Top-Up",
+                        text = if (language == AppLanguage.ARABIC) "شحن رصيد سريع بمصر (فوري / بطاقات ميزة / بنوك)" else "Quick 1-Click Top-Up (Fawry / Meeza / Visa)",
                         style = MaterialTheme.typography.labelSmall,
                         color = FarasTextSecondary
                     )
@@ -166,7 +172,7 @@ fun WalletScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(FarasSurfaceDark)
+                                    .background(FarasLightGreyBg)
                                     .border(1.dp, FarasCardBorder, RoundedCornerShape(12.dp))
                                     .clickable { viewModel.addWalletFunds(amount) }
                                     .padding(vertical = 10.dp)
@@ -177,7 +183,7 @@ fun WalletScreen(
                                     text = "+${amount.toInt()} ${AppStrings.get("currency", language)}",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = FarasNeonGreen
+                                    color = FarasNeonGreenDark
                                 )
                             }
                         }
@@ -192,7 +198,7 @@ fun WalletScreen(
                 text = if (language == AppLanguage.ARABIC) "سجل العمليات الأخيرة" else "Recent Transactions",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = FarasWhite
+                color = FarasTextPrimary
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -202,7 +208,7 @@ fun WalletScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(uiState.walletTransactions) { tx ->
-                    TransactionRow(tx = tx, language = language)
+                    TransactionRowLight(tx = tx, language = language)
                 }
             }
         }
@@ -210,7 +216,7 @@ fun WalletScreen(
 }
 
 @Composable
-private fun TransactionRow(
+private fun TransactionRowLight(
     tx: WalletTransaction,
     language: AppLanguage
 ) {
@@ -218,7 +224,8 @@ private fun TransactionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(FarasCardBg)
+            .background(FarasWhite)
+            .border(1.dp, FarasCardBorder, RoundedCornerShape(14.dp))
             .padding(14.dp)
     ) {
         Row(
@@ -231,13 +238,13 @@ private fun TransactionRow(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(if (tx.isCredit) FarasNeonGreen.copy(alpha = 0.15f) else FarasSurfaceDark),
+                        .background(if (tx.isCredit) FarasNeonGreenLight else FarasSurfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (tx.isCredit) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
                         contentDescription = null,
-                        tint = if (tx.isCredit) FarasNeonGreen else FarasTextSecondary,
+                        tint = if (tx.isCredit) FarasNeonGreenDark else FarasTextSecondary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -247,7 +254,7 @@ private fun TransactionRow(
                         text = if (language == AppLanguage.ARABIC) tx.titleAr else tx.titleEn,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = FarasWhite
+                        color = FarasTextPrimary
                     )
                     Text(
                         text = tx.date,
@@ -261,7 +268,7 @@ private fun TransactionRow(
                 text = "${if (tx.isCredit) "+" else "-"}${tx.amount.toInt()} ${AppStrings.get("currency", language)}",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = if (tx.isCredit) FarasNeonGreen else FarasWhite
+                color = if (tx.isCredit) FarasNeonGreenDark else FarasTextPrimary
             )
         }
     }

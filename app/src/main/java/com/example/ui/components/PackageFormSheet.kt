@@ -42,11 +42,12 @@ import com.example.data.AppLanguage
 import com.example.data.AppStrings
 import com.example.model.PackageDetails
 import com.example.ui.theme.FarasAmber
-import com.example.ui.theme.FarasBlack
-import com.example.ui.theme.FarasCardBg
+import com.example.ui.theme.FarasAmberBg
 import com.example.ui.theme.FarasCardBorder
+import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
-import com.example.ui.theme.FarasSurfaceDark
+import com.example.ui.theme.FarasNeonGreenDark
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 
@@ -64,8 +65,9 @@ fun PackageFormSheet(
     var weightKg by remember { mutableStateOf(initialDraft.weightKg.toString()) }
 
     Surface(
-        color = FarasSurfaceDark,
+        color = FarasWhite,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shadowElevation = 8.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
         modifier = modifier.fillMaxWidth()
     ) {
@@ -86,7 +88,7 @@ fun PackageFormSheet(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = FarasWhite
+                        tint = FarasTextPrimary
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -95,7 +97,7 @@ fun PackageFormSheet(
                         text = AppStrings.get("package_info_title", language),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = FarasWhite
+                        color = FarasTextPrimary
                     )
                     Text(
                         text = AppStrings.get("service_send_package_desc", language),
@@ -107,12 +109,12 @@ fun PackageFormSheet(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Crucial Weight & Dimensions Safety Banner (15 kg cap mandated in spec)
+            // 15 kg Safety Notice Banner
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(FarasAmber.copy(alpha = 0.15f))
+                    .background(FarasAmberBg)
                     .border(1.dp, FarasAmber.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                     .padding(12.dp)
             ) {
@@ -127,7 +129,7 @@ fun PackageFormSheet(
                     Text(
                         text = AppStrings.get("weight_notice", language),
                         style = MaterialTheme.typography.bodySmall,
-                        color = FarasWhite,
+                        color = FarasTextPrimary,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -141,9 +143,9 @@ fun PackageFormSheet(
                 onValueChange = { description = it },
                 label = { Text(AppStrings.get("package_desc", language)) },
                 leadingIcon = {
-                    Icon(Icons.Default.LocalShipping, contentDescription = null, tint = FarasNeonGreen)
+                    Icon(Icons.Default.LocalShipping, contentDescription = null, tint = FarasNeonGreenDark)
                 },
-                colors = textFieldColors(),
+                colors = textFieldColorsLight(),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -158,9 +160,9 @@ fun PackageFormSheet(
                 onValueChange = { receiverName = it },
                 label = { Text(AppStrings.get("receiver_name", language)) },
                 leadingIcon = {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = FarasNeonGreen)
+                    Icon(Icons.Default.Person, contentDescription = null, tint = FarasNeonGreenDark)
                 },
-                colors = textFieldColors(),
+                colors = textFieldColorsLight(),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -175,9 +177,9 @@ fun PackageFormSheet(
                 onValueChange = { receiverPhone = it },
                 label = { Text(AppStrings.get("receiver_phone", language)) },
                 leadingIcon = {
-                    Icon(Icons.Default.Phone, contentDescription = null, tint = FarasNeonGreen)
+                    Icon(Icons.Default.Phone, contentDescription = null, tint = FarasNeonGreenDark)
                 },
-                colors = textFieldColors(),
+                colors = textFieldColorsLight(),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -210,7 +212,7 @@ fun PackageFormSheet(
                     text = AppStrings.get("confirm_package", language),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = FarasBlack
+                    color = FarasWhite
                 )
             }
         }
@@ -218,13 +220,13 @@ fun PackageFormSheet(
 }
 
 @Composable
-fun textFieldColors() = OutlinedTextFieldDefaults.colors(
+fun textFieldColorsLight() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = FarasNeonGreen,
     unfocusedBorderColor = FarasCardBorder,
-    focusedContainerColor = FarasCardBg,
-    unfocusedContainerColor = FarasCardBg,
-    focusedTextColor = FarasWhite,
-    unfocusedTextColor = FarasWhite,
-    focusedLabelColor = FarasNeonGreen,
+    focusedContainerColor = FarasLightGreyBg,
+    unfocusedContainerColor = FarasLightGreyBg,
+    focusedTextColor = FarasTextPrimary,
+    unfocusedTextColor = FarasTextPrimary,
+    focusedLabelColor = FarasNeonGreenDark,
     unfocusedLabelColor = FarasTextSecondary
 )

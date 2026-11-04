@@ -23,9 +23,18 @@ enum class TripStatus {
     CANCELLED
 }
 
+data class ScooterVsCarComparison(
+    val scooterDurationMin: Int,
+    val carDurationMin: Int,
+    val timeSavedMin: Int,
+    val scooterFareEgp: Double,
+    val carFareEgp: Double,
+    val moneySavedEgp: Double
+)
+
 data class ScooterLocation(
     val id: String,
-    val xRatio: Float, // 0.0f to 1.0f on map canvas
+    val xRatio: Float,
     val yRatio: Float,
     val heading: Float = 0f,
     val isAvailable: Boolean = true,
@@ -40,12 +49,44 @@ data class Captain(
     val totalRides: Int,
     val plateNumber: String,
     val scooterModel: String,
-    val avatarColorHex: Long = 0xFF00E676,
+    val avatarColorHex: Long = 0xFF00C853,
     val isVerified: Boolean = true,
     val hasSanitizedHelmet: Boolean = true,
-    val nationalId: String = "1098452319",
-    val licenseStatus: String = "سارية المفعول (Valid)",
+    val nationalId: String = "29408150102938",
+    val licenseStatus: String = "سارية (مرور الجيزة)",
     val criminalRecordClean: Boolean = true
+)
+
+data class CaptainNeedRequest(
+    val id: String,
+    val captainName: String,
+    val captainPhone: String,
+    val category: String, // "خوذة جديدة", "صيانة سكوتر", "بطارية إضافية", "مكافأة تميز"
+    val description: String,
+    val date: String,
+    var isFulfilled: Boolean = false
+)
+
+data class DeviceDownloadRecord(
+    val id: String,
+    val deviceModel: String,
+    val osType: String, // "Android 15", "iOS 18"
+    val governorate: String, // "القاهرة", "الجيزة", "الإسكندرية", "المنصورة"
+    val appVersion: String,
+    val downloadDate: String,
+    val isOnline: Boolean
+)
+
+data class AiMarketingCampaign(
+    val id: String,
+    val platform: String, // "Facebook", "TikTok", "Instagram", "X (Twitter)"
+    val targetArea: String,
+    val headline: String,
+    val dialectCaption: String,
+    val hashtags: String,
+    val suggestedBudgetEgp: Int,
+    val estimatedReach: String,
+    val createdTime: String
 )
 
 data class PlaceItem(
@@ -69,7 +110,7 @@ data class PackageDetails(
 data class ErrandDetails(
     val storeName: String = "",
     val itemsList: String = "",
-    val estimatedBudget: Double = 50.0
+    val estimatedBudget: Double = 80.0
 )
 
 data class ChatMessage(
@@ -109,9 +150,12 @@ data class TripOrder(
     val destYRatio: Float,
     val distanceKm: Double,
     val durationMin: Int,
+    val carDurationMin: Int,
     val baseFare: Double,
     val surgeMultiplier: Double,
     val finalFare: Double,
+    val carEstimatedFare: Double,
+    val comparison: ScooterVsCarComparison,
     val paymentMethod: PaymentMethod,
     val status: TripStatus,
     val captain: Captain?,

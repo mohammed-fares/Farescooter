@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,13 +38,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.data.AppLanguage
 import com.example.data.AppStrings
+import com.example.model.ScooterVsCarComparison
 import com.example.model.ServiceType
 import com.example.model.TripOrder
 import com.example.ui.theme.FarasAmber
-import com.example.ui.theme.FarasBlack
-import com.example.ui.theme.FarasCardBg
+import com.example.ui.theme.FarasCardBorder
+import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
-import com.example.ui.theme.FarasSurfaceDark
+import com.example.ui.theme.FarasNeonGreenDark
+import com.example.ui.theme.FarasNeonGreenLight
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 import com.example.viewmodel.CustomerScreen
@@ -63,7 +67,7 @@ fun TripHistoryScreen(
     }
 
     Surface(
-        color = FarasBlack,
+        color = FarasLightGreyBg,
         modifier = modifier.fillMaxSize()
     ) {
         Column(
@@ -83,7 +87,7 @@ fun TripHistoryScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = FarasWhite
+                        tint = FarasTextPrimary
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -91,7 +95,7 @@ fun TripHistoryScreen(
                     text = AppStrings.get("trips_history", language),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = FarasWhite
+                    color = FarasTextPrimary
                 )
             }
 
@@ -100,39 +104,45 @@ fun TripHistoryScreen(
             val trips = if (uiState.tripHistory.isEmpty()) {
                 listOf(
                     TripOrder(
-                        id = "FS-9912",
+                        id = "FS-EG-1029",
                         serviceType = ServiceType.RIDE,
-                        pickupAddress = "برج خليفة، وسط المدينة",
-                        destinationAddress = "مركز دبي المالي DIFC",
+                        pickupAddress = "ميدان التحرير، وسط البلد",
+                        destinationAddress = "برج القاهرة، الزمالك",
                         pickupXRatio = 0.5f,
                         pickupYRatio = 0.5f,
-                        destXRatio = 0.7f,
-                        destYRatio = 0.3f,
-                        distanceKm = 2.9,
-                        durationMin = 7,
-                        baseFare = 22.0,
+                        destXRatio = 0.44f,
+                        destYRatio = 0.48f,
+                        distanceKm = 2.6,
+                        durationMin = 8,
+                        carDurationMin = 22,
+                        baseFare = 21.0,
                         surgeMultiplier = 1.0,
-                        finalFare = 22.0,
+                        finalFare = 21.0,
+                        carEstimatedFare = 48.0,
+                        comparison = ScooterVsCarComparison(8, 22, 14, 21.0, 48.0, 27.0),
                         paymentMethod = com.example.model.PaymentMethod.WALLET,
                         status = com.example.model.TripStatus.COMPLETED,
                         captain = viewModel.uiState.value.captainsList[0],
                         rating = 5
                     ),
                     TripOrder(
-                        id = "FS-8814",
+                        id = "FS-EG-8842",
                         serviceType = ServiceType.SEND_PACKAGE,
-                        pickupAddress = "الخليج التجاري",
-                        destinationAddress = "سيتي سنتر ديرة",
-                        pickupXRatio = 0.4f,
-                        pickupYRatio = 0.6f,
-                        destXRatio = 0.8f,
-                        destYRatio = 0.2f,
-                        distanceKm = 5.2,
-                        durationMin = 14,
-                        baseFare = 28.0,
-                        surgeMultiplier = 1.2,
-                        finalFare = 33.6,
-                        paymentMethod = com.example.model.PaymentMethod.CREDIT_CARD,
+                        pickupAddress = "المهندسين، شارع جامعة الدول",
+                        destinationAddress = "المعادي، شارع 9",
+                        pickupXRatio = 0.32f,
+                        pickupYRatio = 0.45f,
+                        destXRatio = 0.46f,
+                        destYRatio = 0.75f,
+                        distanceKm = 6.5,
+                        durationMin = 16,
+                        carDurationMin = 42,
+                        baseFare = 32.0,
+                        surgeMultiplier = 1.0,
+                        finalFare = 32.0,
+                        carEstimatedFare = 78.0,
+                        comparison = ScooterVsCarComparison(16, 42, 26, 32.0, 78.0, 46.0),
+                        paymentMethod = com.example.model.PaymentMethod.CASH,
                         status = com.example.model.TripStatus.COMPLETED,
                         captain = viewModel.uiState.value.captainsList[1],
                         rating = 5
@@ -147,7 +157,7 @@ fun TripHistoryScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(trips) { trip ->
-                    TripReceiptCard(trip = trip, language = language)
+                    TripReceiptCardLight(trip = trip, language = language)
                 }
             }
         }
@@ -155,7 +165,7 @@ fun TripHistoryScreen(
 }
 
 @Composable
-private fun TripReceiptCard(
+private fun TripReceiptCardLight(
     trip: TripOrder,
     language: AppLanguage
 ) {
@@ -163,7 +173,8 @@ private fun TripReceiptCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(FarasCardBg)
+            .background(FarasWhite)
+            .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Column {
@@ -177,7 +188,7 @@ private fun TripReceiptCard(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(FarasSurfaceDark),
+                            .background(FarasNeonGreenLight),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -187,7 +198,7 @@ private fun TripReceiptCard(
                                 ServiceType.BUY_AND_GET -> Icons.Default.LocalMall
                             },
                             contentDescription = null,
-                            tint = FarasNeonGreen,
+                            tint = FarasNeonGreenDark,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -201,7 +212,7 @@ private fun TripReceiptCard(
                             },
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = FarasWhite
+                            color = FarasTextPrimary
                         )
                         Text(
                             text = trip.id,
@@ -215,16 +226,16 @@ private fun TripReceiptCard(
                     text = "${trip.finalFare} ${AppStrings.get("currency", language)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = FarasNeonGreen
+                    color = FarasNeonGreenDark
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = "${trip.pickupAddress} ➔ ${trip.destinationAddress}",
                 style = MaterialTheme.typography.bodySmall,
-                color = FarasWhite
+                color = FarasTextPrimary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -252,7 +263,7 @@ private fun TripReceiptCard(
                         text = "5.0",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = FarasWhite
+                        color = FarasTextPrimary
                     )
                 }
             }

@@ -1,6 +1,5 @@
 package com.example.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,9 +22,8 @@ import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.ElectricScooter
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.TwoWheeler
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,13 +37,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.AppLanguage
 import com.example.data.AppStrings
-import com.example.ui.theme.FarasBlack
-import com.example.ui.theme.FarasCardBg
 import com.example.ui.theme.FarasCardBorder
+import com.example.ui.theme.FarasLightCard
+import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
+import com.example.ui.theme.FarasNeonGreenDark
+import com.example.ui.theme.FarasNeonGreenLight
+import com.example.ui.theme.FarasSurfaceVariant
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 import com.example.viewmodel.AppMode
@@ -56,13 +57,13 @@ fun FarascooterTopBar(
     language: AppLanguage,
     walletBalance: Double,
     onModeSelected: (AppMode) -> Unit,
-    onLanguageToggle: () -> Unit,
     onWalletClicked: () -> Unit,
     onProfileClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
-        color = FarasBlack.copy(alpha = 0.92f),
+        color = FarasWhite,
+        shadowElevation = 2.dp,
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
@@ -70,9 +71,9 @@ fun FarascooterTopBar(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
-            // Top Row: Brand + Wallet + Lang + Profile
+            // Top Row: Logo & Brand + Country Badge + Wallet + Profile (Language switch is only in Profile)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -85,7 +86,7 @@ fun FarascooterTopBar(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(38.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(FarasNeonGreen),
                         contentAlignment = Alignment.Center
@@ -93,64 +94,52 @@ fun FarascooterTopBar(
                         Icon(
                             imageVector = Icons.Default.ElectricScooter,
                             contentDescription = "Farascooter Logo",
-                            tint = FarasBlack,
+                            tint = FarasWhite,
                             modifier = Modifier.size(24.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = AppStrings.get("app_name", language),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(FarasNeonGreenLight)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = if (language == AppLanguage.ARABIC) "مصر 🇪🇬" else "Egypt 🇪🇬",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = FarasNeonGreenDark
+                                )
+                            }
+                        }
                         Text(
-                            text = AppStrings.get("app_name", language),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = FarasWhite
-                        )
-                        Text(
-                            text = if (language == AppLanguage.ARABIC) "أوبر السكوتر الذكي" else "The Scooter Ride",
+                            text = if (language == AppLanguage.ARABIC) "أسرع سكوتر لتجاوز الزحام" else "Fastest Scooter Ride",
                             style = MaterialTheme.typography.labelSmall,
-                            color = FarasNeonGreen
+                            color = FarasTextSecondary
                         )
                     }
                 }
 
-                // Actions: Quick Lang Switch, Wallet, Profile
+                // Actions: Wallet + Profile
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Language Toggle Pill
+                    // Wallet Quick Pill in EGP
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(FarasCardBg)
-                            .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
-                            .clickable { onLanguageToggle() }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                            .testTag("language_toggle_btn"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Language,
-                                contentDescription = "Language",
-                                tint = FarasNeonGreen,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (language == AppLanguage.ARABIC) "EN" else "عربي",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = FarasWhite
-                            )
-                        }
-                    }
-
-                    // Wallet Quick Pill
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(FarasCardBg)
+                            .background(FarasLightGreyBg)
                             .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
                             .clickable { onWalletClicked() }
                             .padding(horizontal = 10.dp, vertical = 6.dp)
@@ -162,14 +151,14 @@ fun FarascooterTopBar(
                                 imageVector = Icons.Default.AccountBalanceWallet,
                                 contentDescription = "Wallet",
                                 tint = FarasNeonGreen,
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "${walletBalance.toInt()} ${AppStrings.get("currency", language)}",
                                 style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = FarasWhite
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
                             )
                         }
                     }
@@ -180,14 +169,15 @@ fun FarascooterTopBar(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(FarasCardBg)
+                            .background(FarasLightGreyBg)
+                            .border(1.dp, FarasCardBorder, CircleShape)
                             .testTag("topbar_profile_btn")
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
-                            tint = FarasWhite,
-                            modifier = Modifier.size(18.dp)
+                            tint = FarasTextPrimary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -195,12 +185,12 @@ fun FarascooterTopBar(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Bottom Row: All-in-One Mode Selector (Customer, Captain, Admin)
+            // Navigation Mode Tabs: Customer, Captain, Web Portal, Admin
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(FarasCardBg)
+                    .background(FarasSurfaceVariant)
                     .padding(3.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -217,6 +207,13 @@ fun FarascooterTopBar(
                     isSelected = currentMode == AppMode.CAPTAIN,
                     modifier = Modifier.weight(1f),
                     onClick = { onModeSelected(AppMode.CAPTAIN) }
+                )
+                ModeTabPill(
+                    title = AppStrings.get("role_web", language),
+                    icon = Icons.Default.Public,
+                    isSelected = currentMode == AppMode.WEB_PORTAL,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onModeSelected(AppMode.WEB_PORTAL) }
                 )
                 ModeTabPill(
                     title = AppStrings.get("role_admin", language),
@@ -253,15 +250,15 @@ private fun ModeTabPill(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = if (isSelected) FarasBlack else FarasTextSecondary,
+                tint = if (isSelected) FarasWhite else FarasTextSecondary,
                 modifier = Modifier.size(15.dp)
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(3.dp))
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) FarasBlack else FarasTextSecondary,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) FarasWhite else FarasTextSecondary,
                 maxLines = 1
             )
         }

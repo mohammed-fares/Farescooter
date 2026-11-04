@@ -22,42 +22,49 @@ val AppTypography = Typography(
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
         lineHeight = 40.sp,
-        color = FarasWhite
+        color = FarasTextPrimary
     ),
     displayMedium = TextStyle(
         fontFamily = CairoFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 26.sp,
         lineHeight = 34.sp,
-        color = FarasWhite
+        color = FarasTextPrimary
     ),
     headlineMedium = TextStyle(
         fontFamily = CairoFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 20.sp,
         lineHeight = 28.sp,
-        color = FarasWhite
+        color = FarasTextPrimary
     ),
     titleLarge = TextStyle(
         fontFamily = CairoFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 18.sp,
         lineHeight = 24.sp,
-        color = FarasWhite
+        color = FarasTextPrimary
     ),
     titleMedium = TextStyle(
         fontFamily = CairoFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
         lineHeight = 22.sp,
-        color = FarasWhite
+        color = FarasTextPrimary
+    ),
+    titleSmall = TextStyle(
+        fontFamily = CairoFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        color = FarasTextPrimary
     ),
     bodyLarge = TextStyle(
         fontFamily = CairoFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 15.sp,
         lineHeight = 22.sp,
-        color = FarasWhite
+        color = FarasTextPrimary
     ),
     bodyMedium = TextStyle(
         fontFamily = CairoFontFamily,
@@ -66,12 +73,19 @@ val AppTypography = Typography(
         lineHeight = 18.sp,
         color = FarasTextSecondary
     ),
+    bodySmall = TextStyle(
+        fontFamily = CairoFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        color = FarasTextSecondary
+    ),
     labelLarge = TextStyle(
         fontFamily = CairoFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
         lineHeight = 20.sp,
-        color = FarasWhite
+        color = FarasTextPrimary
     ),
     labelMedium = TextStyle(
         fontFamily = CairoFontFamily,

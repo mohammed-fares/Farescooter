@@ -2,10 +2,6 @@ package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,8 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,6 +27,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ElectricScooter
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.HealthAndSafety
@@ -40,13 +35,16 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocalMall
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Money
-import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -77,13 +75,19 @@ import com.example.ui.components.InteractiveDarkMap
 import com.example.ui.components.PackageFormSheet
 import com.example.ui.components.TripRatingSheet
 import com.example.ui.theme.FarasAmber
-import com.example.ui.theme.FarasBlack
-import com.example.ui.theme.FarasCardBg
+import com.example.ui.theme.FarasAmberBg
+import com.example.ui.theme.FarasBlue
+import com.example.ui.theme.FarasBlueBg
 import com.example.ui.theme.FarasCardBorder
+import com.example.ui.theme.FarasLightCard
+import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
+import com.example.ui.theme.FarasNeonGreenDark
+import com.example.ui.theme.FarasNeonGreenLight
 import com.example.ui.theme.FarasRedAlert
-import com.example.ui.theme.FarasSurfaceDark
+import com.example.ui.theme.FarasSurfaceVariant
 import com.example.ui.theme.FarasTextMuted
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 import com.example.viewmodel.CustomerScreen
@@ -98,7 +102,6 @@ fun CustomerHomeScreen(
 ) {
     val language = uiState.language
 
-    // Back handling
     BackHandler(enabled = uiState.customerScreen != CustomerScreen.HOME) {
         when (uiState.customerScreen) {
             CustomerScreen.PACKAGE_FORM, CustomerScreen.ERRAND_FORM, CustomerScreen.SEARCH_DESTINATION -> {
@@ -115,7 +118,7 @@ fun CustomerHomeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 1. Dynamic Interactive Dark Map Background
+        // 1. Interactive Map Background
         InteractiveDarkMap(
             nearbyScooters = uiState.nearbyScooters,
             currentTrip = uiState.activeTrip,
@@ -133,7 +136,7 @@ fun CustomerHomeScreen(
             visible = uiState.sosAlertNotification != null,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 80.dp, start = 16.dp, end = 16.dp)
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -248,8 +251,9 @@ private fun CustomerHomeControlsSheet(
     val scrollState = rememberScrollState()
 
     Surface(
-        color = FarasSurfaceDark,
+        color = FarasWhite,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shadowElevation = 8.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -262,7 +266,7 @@ private fun CustomerHomeControlsSheet(
             // Drag handle indicator
             Box(
                 modifier = Modifier
-                    .size(width = 40.dp, height = 4.dp)
+                    .size(width = 44.dp, height = 4.dp)
                     .clip(CircleShape)
                     .background(FarasCardBorder)
                     .align(Alignment.CenterHorizontally)
@@ -270,13 +274,13 @@ private fun CustomerHomeControlsSheet(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Peak Surge Banner (if active)
+            // Peak Rush Hour Banner in Cairo (if active)
             if (uiState.surgeMultiplier > 1.0) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(FarasAmber.copy(alpha = 0.12f))
+                        .background(FarasAmberBg)
                         .border(1.dp, FarasAmber.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
@@ -304,7 +308,7 @@ private fun CustomerHomeControlsSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(FarasCardBg)
+                    .background(FarasLightGreyBg)
                     .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
                     .clickable { viewModel.setCustomerScreen(CustomerScreen.SEARCH_DESTINATION) }
                     .padding(horizontal = 16.dp, vertical = 14.dp)
@@ -327,20 +331,21 @@ private fun CustomerHomeControlsSheet(
                             text = AppStrings.get("where_to", language),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = FarasWhite
+                            color = FarasTextPrimary
                         )
                     }
 
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(FarasSurfaceDark)
+                            .background(FarasNeonGreenLight)
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "Now 🛵",
+                            text = "سكوتر متاح 🛵",
                             style = MaterialTheme.typography.labelSmall,
-                            color = FarasNeonGreen
+                            fontWeight = FontWeight.Bold,
+                            color = FarasNeonGreenDark
                         )
                     }
                 }
@@ -350,7 +355,7 @@ private fun CustomerHomeControlsSheet(
 
             // The Three Core Services Grid (Ride, Send Package, Buy & Get)
             Text(
-                text = if (language == AppLanguage.ARABIC) "الخدمات الثلاثية الأساسية" else "Farascooter Core Services",
+                text = if (language == AppLanguage.ARABIC) "خدمات فارسكوتر في مصر" else "Farascooter Core Services",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = FarasTextSecondary
@@ -363,42 +368,42 @@ private fun CustomerHomeControlsSheet(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // 1. Ride (مشوار)
-                ServiceGridCard(
+                ServiceGridCardLight(
                     title = AppStrings.get("service_ride", language),
-                    sub = if (language == AppLanguage.ARABIC) "تجاوز الزحام" else "Skip traffic",
+                    sub = if (language == AppLanguage.ARABIC) "تجاوز زحمة أكتوبر" else "Skip traffic",
                     icon = Icons.Default.ElectricScooter,
                     isSelected = uiState.selectedServiceType == ServiceType.RIDE,
                     modifier = Modifier.weight(1f),
-                    badge = "خوذة معقمة",
+                    badge = "أسرع 45%",
                     onClick = { viewModel.selectServiceType(ServiceType.RIDE) }
                 )
 
                 // 2. Send Package (إرسال طرد)
-                ServiceGridCard(
+                ServiceGridCardLight(
                     title = AppStrings.get("service_send_package", language),
-                    sub = if (language == AppLanguage.ARABIC) "حتى 15 كجم" else "Up to 15kg",
+                    sub = if (language == AppLanguage.ARABIC) "أمان حتى 15 كجم" else "Up to 15kg",
                     icon = Icons.Default.Inventory2,
                     isSelected = uiState.selectedServiceType == ServiceType.SEND_PACKAGE,
                     modifier = Modifier.weight(1f),
-                    badge = "15kg max",
+                    badge = "15 كجم",
                     onClick = { viewModel.selectServiceType(ServiceType.SEND_PACKAGE) }
                 )
 
                 // 3. Buy & Get (جلب غرض)
-                ServiceGridCard(
+                ServiceGridCardLight(
                     title = AppStrings.get("service_buy_and_get", language),
-                    sub = if (language == AppLanguage.ARABIC) "صيدلية وسوبرماركت" else "Buy & bring",
+                    sub = if (language == AppLanguage.ARABIC) "صيدلية وماركت" else "Buy & bring",
                     icon = Icons.Default.LocalMall,
                     isSelected = uiState.selectedServiceType == ServiceType.BUY_AND_GET,
                     modifier = Modifier.weight(1f),
-                    badge = "شراء وتوصيل",
+                    badge = "توصيل سريع",
                     onClick = { viewModel.selectServiceType(ServiceType.BUY_AND_GET) }
                 )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Quick Popular Destinations
+            // Quick Destinations in Cairo & Giza
             Text(
                 text = AppStrings.get("popular_places", language),
                 style = MaterialTheme.typography.titleSmall,
@@ -410,7 +415,7 @@ private fun CustomerHomeControlsSheet(
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 uiState.popularPlaces.forEach { place ->
-                    PlaceRowItem(
+                    PlaceRowItemLight(
                         place = place,
                         language = language,
                         onClick = { viewModel.selectDestination(place) }
@@ -422,7 +427,7 @@ private fun CustomerHomeControlsSheet(
 }
 
 @Composable
-private fun ServiceGridCard(
+private fun ServiceGridCardLight(
     title: String,
     sub: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -434,7 +439,7 @@ private fun ServiceGridCard(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(if (isSelected) FarasNeonGreen.copy(alpha = 0.12f) else FarasCardBg)
+            .background(if (isSelected) FarasNeonGreenLight else FarasLightGreyBg)
             .border(
                 width = if (isSelected) 2.dp else 1.dp,
                 color = if (isSelected) FarasNeonGreen else FarasCardBorder,
@@ -448,13 +453,13 @@ private fun ServiceGridCard(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) FarasNeonGreen else FarasSurfaceDark),
+                    .background(if (isSelected) FarasNeonGreen else FarasWhite),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = title,
-                    tint = if (isSelected) FarasBlack else FarasNeonGreen,
+                    tint = if (isSelected) FarasWhite else FarasNeonGreen,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -465,7 +470,7 @@ private fun ServiceGridCard(
                 text = title,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = FarasWhite,
+                color = FarasTextPrimary,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -483,7 +488,7 @@ private fun ServiceGridCard(
 }
 
 @Composable
-private fun PlaceRowItem(
+private fun PlaceRowItemLight(
     place: PlaceItem,
     language: AppLanguage,
     onClick: () -> Unit
@@ -491,8 +496,9 @@ private fun PlaceRowItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(FarasCardBg)
+            .clip(RoundedCornerShape(14.dp))
+            .background(FarasLightGreyBg)
+            .border(1.dp, FarasCardBorder, RoundedCornerShape(14.dp))
             .clickable { onClick() }
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -503,7 +509,7 @@ private fun PlaceRowItem(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(FarasSurfaceDark),
+                    .background(FarasWhite),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -518,8 +524,8 @@ private fun PlaceRowItem(
                 Text(
                     text = if (language == AppLanguage.ARABIC) place.nameAr else place.nameEn,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = FarasWhite,
+                    fontWeight = FontWeight.Bold,
+                    color = FarasTextPrimary,
                     maxLines = 1
                 )
                 Text(
@@ -535,7 +541,7 @@ private fun PlaceRowItem(
             text = "${place.distanceKm} ${AppStrings.get("km", language)}",
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
-            color = FarasNeonGreen
+            color = FarasNeonGreenDark
         )
     }
 }
@@ -549,17 +555,26 @@ private fun ConfirmOrderSheet(
     val dest = uiState.selectedDestination ?: uiState.popularPlaces[0]
     val service = uiState.selectedServiceType
 
-    val baseRate = when (service) {
-        ServiceType.RIDE -> 18.0
-        ServiceType.SEND_PACKAGE -> 15.0
-        ServiceType.BUY_AND_GET -> 22.0
-    }
-    val distanceCost = dest.distanceKm * 2.5
-    val estimatedTotal = (baseRate + distanceCost) * uiState.surgeMultiplier
+    // Intelligent Scooter vs Car Calculation based on distance in Egypt:
+    // Scooter: speed 35km/h in congested traffic, bypasses standstill jams, lane filtering.
+    // Car: standstill on 6th October bridge/Mehwar, 15km/h avg speed during traffic.
+    val scooterDurationMin = (dest.distanceKm * 2.2).toInt().coerceAtLeast(5)
+    val carDurationMin = (dest.distanceKm * 4.8).toInt().coerceAtLeast(15)
+    val timeSavedMin = carDurationMin - scooterDurationMin
+
+    // Fare calculation in EGP
+    val scooterBase = 12.0
+    val scooterKmRate = 3.5
+    val scooterMinuteRate = 0.6
+    val scooterTotal = (scooterBase + (dest.distanceKm * scooterKmRate) + (scooterDurationMin * scooterMinuteRate)) * uiState.surgeMultiplier
+
+    val carEstimatedFare = (25.0 + (dest.distanceKm * 7.5) + (carDurationMin * 1.2)) * uiState.surgeMultiplier
+    val moneySaved = carEstimatedFare - scooterTotal
 
     Surface(
-        color = FarasSurfaceDark,
+        color = FarasWhite,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shadowElevation = 8.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -583,12 +598,12 @@ private fun ConfirmOrderSheet(
                         },
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = FarasWhite
+                        color = FarasTextPrimary
                     )
                     Text(
-                        text = "${dest.distanceKm} ${AppStrings.get("km", language)} • ~${(dest.distanceKm * 2.8).toInt().coerceAtLeast(4)} ${AppStrings.get("minutes", language)}",
+                        text = "${dest.distanceKm} ${AppStrings.get("km", language)} • القاهرة / الجيزة",
                         style = MaterialTheme.typography.labelMedium,
-                        color = FarasNeonGreen
+                        color = FarasTextSecondary
                     )
                 }
 
@@ -602,74 +617,125 @@ private fun ConfirmOrderSheet(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Location preview box
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(FarasCardBg)
-                    .padding(14.dp)
+            // CRUCIAL: Scooter vs Car Comparison Card (Mandated in prompt!)
+            Card(
+                colors = CardDefaults.cardColors(containerColor = FarasNeonGreenLight),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, FarasNeonGreen.copy(alpha = 0.5f)),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    // Pickup
+                Column(modifier = Modifier.padding(14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .clip(CircleShape)
-                                .background(FarasNeonGreen)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Icon(Icons.Default.Speed, contentDescription = null, tint = FarasNeonGreenDark, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = AppStrings.get("current_location", language),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = FarasWhite,
-                            maxLines = 1
+                            text = AppStrings.get("scooter_vs_car_title", language),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = FarasNeonGreenDark
                         )
                     }
 
-                    // Destination
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Scooter Metric
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.ElectricScooter, contentDescription = null, tint = FarasNeonGreenDark, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("السكوتر:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = FarasTextPrimary)
+                            }
+                            Text(
+                                text = "$scooterDurationMin دقيقة فقط ⚡",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasNeonGreenDark
+                            )
+                            Text(
+                                text = "${String.format(java.util.Locale.US, "%.1f", scooterTotal)} ج.م",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                        }
+
+                        // Divider
                         Box(
                             modifier = Modifier
-                                .size(10.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(FarasWhite)
+                                .width(1.dp)
+                                .height(50.dp)
+                                .background(FarasNeonGreen.copy(alpha = 0.3f))
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
+
+                        // Car Metric
+                        Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.DirectionsCar, contentDescription = null, tint = FarasTextSecondary, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("السيارة / التاكسي:", style = MaterialTheme.typography.labelSmall, color = FarasTextSecondary)
+                            }
+                            Text(
+                                text = "$carDurationMin دقيقة (في الزحام) 🐢",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = FarasTextSecondary
+                            )
+                            Text(
+                                text = "${String.format(java.util.Locale.US, "%.1f", carEstimatedFare)} ج.م",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = FarasTextSecondary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Savings Summary Badge
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(FarasWhite)
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
                         Text(
-                            text = if (language == AppLanguage.ARABIC) dest.nameAr else dest.nameEn,
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = "🎉 وفرت $timeSavedMin دقيقة من وقتك ووفرت ${String.format(java.util.Locale.US, "%.1f", moneySaved)} ج.م!",
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = FarasWhite,
-                            maxLines = 1
+                            color = FarasNeonGreenDark,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
             }
 
-            // Mandatory Safety Helmet Banner (Specific to Farascooter standard)
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Mandatory Sanitized Helmet Notice
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(FarasNeonGreen.copy(alpha = 0.10f))
-                    .border(1.dp, FarasNeonGreen.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                    .background(FarasSurfaceVariant)
+                    .border(1.dp, FarasCardBorder, RoundedCornerShape(12.dp))
                     .padding(10.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.HealthAndSafety,
                         contentDescription = "Safety Helmet",
-                        tint = FarasNeonGreen,
+                        tint = FarasNeonGreenDark,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = AppStrings.get("safety_helmet_badge", language),
                         style = MaterialTheme.typography.bodySmall,
-                        color = FarasWhite,
+                        color = FarasTextPrimary,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -691,16 +757,17 @@ private fun ConfirmOrderSheet(
                     )
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = String.format(java.util.Locale.US, "%.1f", estimatedTotal),
+                            text = String.format(java.util.Locale.US, "%.1f", scooterTotal),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = FarasWhite
+                            color = FarasTextPrimary
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = AppStrings.get("currency", language),
                             style = MaterialTheme.typography.titleSmall,
-                            color = FarasNeonGreen
+                            fontWeight = FontWeight.Bold,
+                            color = FarasNeonGreenDark
                         )
                     }
                 }
@@ -709,22 +776,23 @@ private fun ConfirmOrderSheet(
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(FarasCardBg)
+                        .background(FarasLightGreyBg)
+                        .border(1.dp, FarasCardBorder, RoundedCornerShape(12.dp))
                         .padding(4.dp)
                 ) {
-                    PaymentTogglePill(
+                    PaymentTogglePillLight(
                         label = AppStrings.get("wallet", language),
                         icon = Icons.Default.AccountBalanceWallet,
                         isSelected = uiState.selectedPaymentMethod == PaymentMethod.WALLET,
                         onClick = { viewModel.selectPaymentMethod(PaymentMethod.WALLET) }
                     )
-                    PaymentTogglePill(
+                    PaymentTogglePillLight(
                         label = AppStrings.get("cash", language),
                         icon = Icons.Default.Money,
                         isSelected = uiState.selectedPaymentMethod == PaymentMethod.CASH,
                         onClick = { viewModel.selectPaymentMethod(PaymentMethod.CASH) }
                     )
-                    PaymentTogglePill(
+                    PaymentTogglePillLight(
                         label = AppStrings.get("credit_card", language),
                         icon = Icons.Default.CreditCard,
                         isSelected = uiState.selectedPaymentMethod == PaymentMethod.CREDIT_CARD,
@@ -753,7 +821,7 @@ private fun ConfirmOrderSheet(
                     },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = FarasBlack
+                    color = FarasWhite
                 )
             }
         }
@@ -761,7 +829,7 @@ private fun ConfirmOrderSheet(
 }
 
 @Composable
-private fun PaymentTogglePill(
+private fun PaymentTogglePillLight(
     label: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     isSelected: Boolean,
@@ -777,7 +845,7 @@ private fun PaymentTogglePill(
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = if (isSelected) FarasBlack else FarasTextSecondary,
+            tint = if (isSelected) FarasWhite else FarasTextSecondary,
             modifier = Modifier.size(16.dp)
         )
     }
@@ -791,8 +859,9 @@ private fun DispatchingRadarSheet(
     val language = uiState.language
 
     Surface(
-        color = FarasSurfaceDark,
+        color = FarasWhite,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shadowElevation = 8.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -802,12 +871,11 @@ private fun DispatchingRadarSheet(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Radar Animation Circle
             Box(
                 modifier = Modifier
                     .size(90.dp)
                     .clip(CircleShape)
-                    .background(FarasNeonGreen.copy(alpha = 0.12f)),
+                    .background(FarasNeonGreenLight),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
@@ -818,7 +886,7 @@ private fun DispatchingRadarSheet(
                 Icon(
                     imageVector = Icons.Default.ElectricScooter,
                     contentDescription = null,
-                    tint = FarasNeonGreen,
+                    tint = FarasNeonGreenDark,
                     modifier = Modifier.size(38.dp)
                 )
             }
@@ -829,7 +897,7 @@ private fun DispatchingRadarSheet(
                 text = AppStrings.get("dispatching_title", language),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = FarasWhite
+                color = FarasTextPrimary
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -843,7 +911,6 @@ private fun DispatchingRadarSheet(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Cancel Button
             OutlinedButton(
                 onClick = { viewModel.cancelOrder() },
                 shape = RoundedCornerShape(14.dp),
@@ -872,8 +939,9 @@ private fun LiveTrackingSheet(
     val captain = trip?.captain ?: viewModel.uiState.value.captainsList.first()
 
     Surface(
-        color = FarasSurfaceDark,
+        color = FarasWhite,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shadowElevation = 8.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -882,7 +950,7 @@ private fun LiveTrackingSheet(
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
-            // Top Status Bar: Status Message + ETA
+            // Status & SOS Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -898,16 +966,17 @@ private fun LiveTrackingSheet(
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = FarasWhite
+                        color = FarasTextPrimary
                     )
                     Text(
                         text = "${AppStrings.get("rider_arriving_in", language)} ${(trip?.durationMin ?: 5)} ${AppStrings.get("minutes", language)}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = FarasNeonGreen
+                        fontWeight = FontWeight.Bold,
+                        color = FarasNeonGreenDark
                     )
                 }
 
-                // RED SOS Emergency Trigger Button
+                // SOS Trigger Button
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
@@ -936,7 +1005,7 @@ private fun LiveTrackingSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Progress Bar of Trip Milestones
+            // Progress Bar
             LinearProgressIndicator(
                 progress = { uiState.captainProgressRatio },
                 color = FarasNeonGreen,
@@ -954,7 +1023,8 @@ private fun LiveTrackingSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(FarasCardBg)
+                    .background(FarasLightGreyBg)
+                    .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
                     .padding(14.dp)
             ) {
                 Row(
@@ -962,19 +1032,18 @@ private fun LiveTrackingSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Avatar & Details
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(50.dp)
                                 .clip(CircleShape)
-                                .background(FarasNeonGreen),
+                                .background(FarasNeonGreenLight),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ElectricScooter,
                                 contentDescription = null,
-                                tint = FarasBlack,
+                                tint = FarasNeonGreenDark,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -984,7 +1053,7 @@ private fun LiveTrackingSheet(
                                 text = captain.name,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = FarasWhite
+                                color = FarasTextPrimary
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
@@ -997,14 +1066,14 @@ private fun LiveTrackingSheet(
                                 Text(
                                     text = "${captain.rating} (${captain.totalRides})",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = FarasWhite
+                                    color = FarasTextPrimary
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "• ${captain.plateNumber}",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = FarasNeonGreen
+                                    color = FarasNeonGreenDark
                                 )
                             }
                             Text(
@@ -1015,38 +1084,37 @@ private fun LiveTrackingSheet(
                         }
                     }
 
-                    // Masked Call & Chat Action Icons
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // Call
                         IconButton(
                             onClick = { /* Masked Call */ },
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(FarasSurfaceDark)
+                                .background(FarasWhite)
+                                .border(1.dp, FarasCardBorder, CircleShape)
                                 .testTag("captain_call_btn")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Call,
                                 contentDescription = "Call",
-                                tint = FarasNeonGreen,
+                                tint = FarasNeonGreenDark,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
 
-                        // In-App Chat
                         IconButton(
                             onClick = { viewModel.toggleChatDialog(true) },
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(FarasSurfaceDark)
+                                .background(FarasWhite)
+                                .border(1.dp, FarasCardBorder, CircleShape)
                                 .testTag("captain_chat_btn")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Chat,
                                 contentDescription = "Chat",
-                                tint = FarasNeonGreen,
+                                tint = FarasNeonGreenDark,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -1056,7 +1124,7 @@ private fun LiveTrackingSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Fast forward milestone button (to easily demonstrate full lifecycle)
+            // Step progression button for testing
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1066,12 +1134,12 @@ private fun LiveTrackingSheet(
                     Icon(
                         imageVector = Icons.Default.Security,
                         contentDescription = null,
-                        tint = FarasNeonGreen,
+                        tint = FarasNeonGreenDark,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (language == AppLanguage.ARABIC) "رحلة مؤمنة ومدارة رقمياً" else "Trip Insured & Monitored",
+                        text = if (language == AppLanguage.ARABIC) "رحلة مؤمنة وخوذة معقمة متوفرة" else "Insured Ride & Sanitized Helmet",
                         style = MaterialTheme.typography.labelSmall,
                         color = FarasTextSecondary
                     )
@@ -1080,23 +1148,24 @@ private fun LiveTrackingSheet(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(FarasCardBg)
+                        .background(FarasSurfaceVariant)
                         .clickable { viewModel.advanceTripMilestone() }
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
                         .testTag("fast_forward_milestone_btn")
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.FastForward,
                             contentDescription = null,
-                            tint = FarasNeonGreen,
+                            tint = FarasNeonGreenDark,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = if (language == AppLanguage.ARABIC) "المرحلة التالية" else "Next Step",
                             style = MaterialTheme.typography.labelSmall,
-                            color = FarasWhite
+                            fontWeight = FontWeight.Bold,
+                            color = FarasTextPrimary
                         )
                     }
                 }

@@ -42,11 +42,13 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.data.AppLanguage
 import com.example.data.AppStrings
 import com.example.model.ChatMessage
-import com.example.ui.theme.FarasBlack
-import com.example.ui.theme.FarasCardBg
 import com.example.ui.theme.FarasCardBorder
+import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
-import com.example.ui.theme.FarasSurfaceDark
+import com.example.ui.theme.FarasNeonGreenDark
+import com.example.ui.theme.FarasNeonGreenLight
+import com.example.ui.theme.FarasSurfaceVariant
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 
@@ -71,7 +73,7 @@ fun InAppChatDialog(
                 .fillMaxHeight(0.75f)
                 .clip(RoundedCornerShape(24.dp))
                 .border(1.dp, FarasCardBorder, RoundedCornerShape(24.dp)),
-            color = FarasSurfaceDark
+            color = FarasWhite
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 // Header
@@ -85,13 +87,13 @@ fun InAppChatDialog(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(FarasNeonGreen),
+                                .background(FarasNeonGreenLight),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "Captain",
-                                tint = FarasBlack
+                                tint = FarasNeonGreenDark
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
@@ -100,13 +102,13 @@ fun InAppChatDialog(
                                 text = captainName,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = FarasWhite
+                                color = FarasTextPrimary
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.Lock,
                                     contentDescription = "Encrypted",
-                                    tint = FarasNeonGreen,
+                                    tint = FarasNeonGreenDark,
                                     modifier = Modifier.size(12.dp)
                                 )
                                 Spacer(modifier = Modifier.width(3.dp))
@@ -124,12 +126,12 @@ fun InAppChatDialog(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(FarasCardBg)
+                            .background(FarasSurfaceVariant)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = FarasWhite
+                            tint = FarasTextPrimary
                         )
                     }
                 }
@@ -160,21 +162,26 @@ fun InAppChatDialog(
                                             bottomEnd = if (isCustomer) 2.dp else 16.dp
                                         )
                                     )
-                                    .background(if (isCustomer) FarasNeonGreen else FarasCardBg)
+                                    .background(if (isCustomer) FarasNeonGreenLight else FarasSurfaceVariant)
+                                    .border(
+                                        1.dp,
+                                        if (isCustomer) FarasNeonGreen.copy(alpha = 0.5f) else FarasCardBorder,
+                                        RoundedCornerShape(16.dp)
+                                    )
                                     .padding(horizontal = 14.dp, vertical = 10.dp)
                             ) {
                                 Column {
                                     Text(
                                         text = msg.text,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = if (isCustomer) FarasBlack else FarasWhite,
+                                        color = if (isCustomer) FarasNeonGreenDark else FarasTextPrimary,
                                         fontWeight = FontWeight.Medium
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = msg.timeFormatted,
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = if (isCustomer) FarasBlack.copy(alpha = 0.6f) else FarasTextSecondary,
+                                        color = FarasTextSecondary,
                                         modifier = Modifier.align(Alignment.End)
                                     )
                                 }
@@ -203,10 +210,10 @@ fun InAppChatDialog(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = FarasNeonGreen,
                             unfocusedBorderColor = FarasCardBorder,
-                            focusedContainerColor = FarasCardBg,
-                            unfocusedContainerColor = FarasCardBg,
-                            focusedTextColor = FarasWhite,
-                            unfocusedTextColor = FarasWhite
+                            focusedContainerColor = FarasLightGreyBg,
+                            unfocusedContainerColor = FarasLightGreyBg,
+                            focusedTextColor = FarasTextPrimary,
+                            unfocusedTextColor = FarasTextPrimary
                         ),
                         shape = RoundedCornerShape(20.dp),
                         modifier = Modifier
@@ -227,7 +234,7 @@ fun InAppChatDialog(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Send",
-                            tint = FarasBlack,
+                            tint = FarasWhite,
                             modifier = Modifier.size(20.dp)
                         )
                     }

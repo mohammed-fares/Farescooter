@@ -34,10 +34,10 @@ import androidx.compose.ui.unit.dp
 import com.example.data.AppLanguage
 import com.example.data.AppStrings
 import com.example.model.ErrandDetails
-import com.example.ui.theme.FarasBlack
 import com.example.ui.theme.FarasCardBorder
 import com.example.ui.theme.FarasNeonGreen
-import com.example.ui.theme.FarasSurfaceDark
+import com.example.ui.theme.FarasNeonGreenDark
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 
@@ -54,8 +54,9 @@ fun ErrandFormSheet(
     var budget by remember { mutableStateOf(initialDraft.estimatedBudget.toString()) }
 
     Surface(
-        color = FarasSurfaceDark,
+        color = FarasWhite,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shadowElevation = 8.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
         modifier = modifier.fillMaxWidth()
     ) {
@@ -76,7 +77,7 @@ fun ErrandFormSheet(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = FarasWhite
+                        tint = FarasTextPrimary
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -85,7 +86,7 @@ fun ErrandFormSheet(
                         text = AppStrings.get("errand_info_title", language),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = FarasWhite
+                        color = FarasTextPrimary
                     )
                     Text(
                         text = AppStrings.get("service_buy_and_get_desc", language),
@@ -103,9 +104,9 @@ fun ErrandFormSheet(
                 onValueChange = { storeName = it },
                 label = { Text(AppStrings.get("store_name", language)) },
                 leadingIcon = {
-                    Icon(Icons.Default.Store, contentDescription = null, tint = FarasNeonGreen)
+                    Icon(Icons.Default.Store, contentDescription = null, tint = FarasNeonGreenDark)
                 },
-                colors = textFieldColors(),
+                colors = textFieldColorsLight(),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -120,11 +121,11 @@ fun ErrandFormSheet(
                 onValueChange = { itemsList = it },
                 label = { Text(AppStrings.get("items_list", language)) },
                 leadingIcon = {
-                    Icon(Icons.Default.ListAlt, contentDescription = null, tint = FarasNeonGreen)
+                    Icon(Icons.Default.ListAlt, contentDescription = null, tint = FarasNeonGreenDark)
                 },
                 minLines = 3,
                 maxLines = 5,
-                colors = textFieldColors(),
+                colors = textFieldColorsLight(),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,15 +134,15 @@ fun ErrandFormSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Budget
+            // Budget in EGP
             OutlinedTextField(
                 value = budget,
                 onValueChange = { budget = it },
                 label = { Text("${AppStrings.get("max_budget", language)} (${AppStrings.get("currency", language)})") },
                 leadingIcon = {
-                    Icon(Icons.Default.Payments, contentDescription = null, tint = FarasNeonGreen)
+                    Icon(Icons.Default.Payments, contentDescription = null, tint = FarasNeonGreenDark)
                 },
-                colors = textFieldColors(),
+                colors = textFieldColorsLight(),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,7 +153,7 @@ fun ErrandFormSheet(
 
             Button(
                 onClick = {
-                    val b = budget.toDoubleOrNull() ?: 50.0
+                    val b = budget.toDoubleOrNull() ?: 80.0
                     onConfirm(
                         ErrandDetails(
                             storeName = storeName,
@@ -172,7 +173,7 @@ fun ErrandFormSheet(
                     text = AppStrings.get("confirm_errand", language),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = FarasBlack
+                    color = FarasWhite
                 )
             }
         }

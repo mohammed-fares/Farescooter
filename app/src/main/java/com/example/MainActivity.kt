@@ -7,11 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -28,7 +26,8 @@ import com.example.ui.screens.DriverModeScreen
 import com.example.ui.screens.ProfileSettingsScreen
 import com.example.ui.screens.TripHistoryScreen
 import com.example.ui.screens.WalletScreen
-import com.example.ui.theme.FarasBlack
+import com.example.ui.screens.WebPortalScreen
+import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarascooterTheme
 import com.example.viewmodel.AppMode
 import com.example.viewmodel.CustomerScreen
@@ -53,14 +52,13 @@ class MainActivity : ComponentActivity() {
                 FarascooterTheme {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
-                        containerColor = FarasBlack,
+                        containerColor = FarasLightGreyBg,
                         topBar = {
                             FarascooterTopBar(
                                 currentMode = uiState.currentMode,
                                 language = uiState.language,
                                 walletBalance = uiState.walletBalance,
                                 onModeSelected = { mode -> viewModel.setAppMode(mode) },
-                                onLanguageToggle = { viewModel.toggleLanguage() },
                                 onWalletClicked = {
                                     viewModel.setAppMode(AppMode.CUSTOMER)
                                     viewModel.setCustomerScreen(CustomerScreen.WALLET)
@@ -76,7 +74,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(innerPadding)
-                                .background(FarasBlack)
+                                .background(FarasLightGreyBg)
                         ) {
                             when (uiState.currentMode) {
                                 AppMode.CUSTOMER -> {
@@ -120,6 +118,14 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
+                                AppMode.WEB_PORTAL -> {
+                                    WebPortalScreen(
+                                        uiState = uiState,
+                                        viewModel = viewModel,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+
                                 AppMode.ADMIN -> {
                                     AdminDashboardScreen(
                                         uiState = uiState,
@@ -133,7 +139,7 @@ class MainActivity : ComponentActivity() {
                             if (uiState.showChatDialog) {
                                 InAppChatDialog(
                                     language = uiState.language,
-                                    captainName = uiState.activeTrip?.captain?.name ?: "الكابتن سيف",
+                                    captainName = uiState.activeTrip?.captain?.name ?: "كابتن سيف الدين",
                                     messages = uiState.activeTrip?.chatMessages ?: emptyList(),
                                     inputText = uiState.chatInputText,
                                     onInputChange = { viewModel.updateChatInput(it) },

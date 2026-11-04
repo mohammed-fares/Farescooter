@@ -2,7 +2,6 @@ package com.example.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,7 +39,7 @@ import com.example.data.AppStrings
 import com.example.ui.theme.FarasCardBorder
 import com.example.ui.theme.FarasRedAlert
 import com.example.ui.theme.FarasRedAlertBg
-import com.example.ui.theme.FarasSurfaceDark
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 
@@ -60,7 +59,7 @@ fun SosEmergencyDialog(
                 .fillMaxWidth(0.9f)
                 .clip(RoundedCornerShape(24.dp))
                 .border(2.dp, FarasRedAlert, RoundedCornerShape(24.dp)),
-            color = FarasSurfaceDark
+            color = FarasWhite
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -88,7 +87,7 @@ fun SosEmergencyDialog(
                     text = AppStrings.get("sos_confirm_title", language),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = FarasWhite,
+                    color = FarasTextPrimary,
                     textAlign = TextAlign.Center
                 )
 

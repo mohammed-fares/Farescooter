@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,11 +42,13 @@ import com.example.data.AppLanguage
 import com.example.data.AppStrings
 import com.example.model.TripOrder
 import com.example.ui.theme.FarasAmber
-import com.example.ui.theme.FarasBlack
-import com.example.ui.theme.FarasCardBg
 import com.example.ui.theme.FarasCardBorder
+import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
-import com.example.ui.theme.FarasSurfaceDark
+import com.example.ui.theme.FarasNeonGreenDark
+import com.example.ui.theme.FarasNeonGreenLight
+import com.example.ui.theme.FarasSurfaceVariant
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 
@@ -59,11 +60,12 @@ fun TripRatingSheet(
     modifier: Modifier = Modifier
 ) {
     var selectedStars by remember { mutableIntStateOf(5) }
-    var selectedTip by remember { mutableDoubleStateOf(5.0) }
+    var selectedTip by remember { mutableDoubleStateOf(10.0) }
 
     Surface(
-        color = FarasSurfaceDark,
+        color = FarasWhite,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shadowElevation = 8.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
         modifier = modifier.fillMaxWidth()
     ) {
@@ -73,18 +75,17 @@ fun TripRatingSheet(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Success Check Badge
             Box(
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
-                    .background(FarasNeonGreen.copy(alpha = 0.15f)),
+                    .background(FarasNeonGreenLight),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Success",
-                    tint = FarasNeonGreen,
+                    tint = FarasNeonGreenDark,
                     modifier = Modifier.size(36.dp)
                 )
             }
@@ -95,18 +96,19 @@ fun TripRatingSheet(
                 text = AppStrings.get("trip_completed_title", language),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = FarasWhite
+                color = FarasTextPrimary
             )
 
             Text(
-                text = "${trip?.finalFare ?: 28.0} ${AppStrings.get("currency", language)} • ${trip?.captain?.name ?: "الكابتن سيف"}",
+                text = "${trip?.finalFare ?: 28.0} ${AppStrings.get("currency", language)} • ${trip?.captain?.name ?: "كابتن سيف الدين"}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = FarasNeonGreen
+                fontWeight = FontWeight.Bold,
+                color = FarasNeonGreenDark
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // 5 Star Rating Bar
+            // Star rating bar
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -124,7 +126,7 @@ fun TripRatingSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // Compliments chips
             Row(
@@ -133,63 +135,48 @@ fun TripRatingSheet(
             ) {
                 val compliment1 = if (language == AppLanguage.ARABIC) "سائق محترف" else "Pro Rider"
                 val compliment2 = if (language == AppLanguage.ARABIC) "خوذة معقمة ونظيفة" else "Sanitized Helmet"
-                val compliment3 = if (language == AppLanguage.ARABIC) "تجاوز سريع للزحام" else "Skipped Traffic"
+                val compliment3 = if (language == AppLanguage.ARABIC) "تجاوز زحمة أكتوبر" else "Skipped Jams"
 
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(FarasCardBg)
+                        .background(FarasLightGreyBg)
                         .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = compliment1,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = FarasTextSecondary,
-                        textAlign = TextAlign.Center
-                    )
+                    Text(text = compliment1, style = MaterialTheme.typography.labelSmall, color = FarasTextSecondary, textAlign = TextAlign.Center)
                 }
                 Box(
                     modifier = Modifier
                         .weight(1.2f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(FarasCardBg)
+                        .background(FarasNeonGreenLight)
                         .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = compliment2,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = FarasNeonGreen,
-                        textAlign = TextAlign.Center
-                    )
+                    Text(text = compliment2, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = FarasNeonGreenDark, textAlign = TextAlign.Center)
                 }
                 Box(
                     modifier = Modifier
                         .weight(1.1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(FarasCardBg)
+                        .background(FarasLightGreyBg)
                         .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = compliment3,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = FarasTextSecondary,
-                        textAlign = TextAlign.Center
-                    )
+                    Text(text = compliment3, style = MaterialTheme.typography.labelSmall, color = FarasTextSecondary, textAlign = TextAlign.Center)
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Tip Selection
+            // Tip Selection in EGP
             Text(
                 text = AppStrings.get("tip_captain", language),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = FarasWhite
+                color = FarasTextPrimary
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -198,7 +185,7 @@ fun TripRatingSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val tipOptions = listOf(0.0, 3.0, 5.0, 10.0)
+                val tipOptions = listOf(0.0, 5.0, 10.0, 20.0)
                 tipOptions.forEach { tipVal ->
                     val isSelected = selectedTip == tipVal
                     val label = if (tipVal == 0.0) AppStrings.get("no_tip", language) else "+${tipVal.toInt()} ${AppStrings.get("currency", language)}"
@@ -207,7 +194,7 @@ fun TripRatingSheet(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (isSelected) FarasNeonGreen else FarasCardBg)
+                            .background(if (isSelected) FarasNeonGreenLight else FarasLightGreyBg)
                             .border(1.dp, if (isSelected) FarasNeonGreen else FarasCardBorder, RoundedCornerShape(12.dp))
                             .clickable { selectedTip = tipVal }
                             .padding(vertical = 10.dp)
@@ -218,7 +205,7 @@ fun TripRatingSheet(
                             text = label,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) FarasBlack else FarasWhite
+                            color = if (isSelected) FarasNeonGreenDark else FarasTextPrimary
                         )
                     }
                 }
@@ -226,7 +213,6 @@ fun TripRatingSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Submit Button
             Button(
                 onClick = { onSubmit(selectedStars, selectedTip) },
                 colors = ButtonDefaults.buttonColors(containerColor = FarasNeonGreen),
@@ -240,7 +226,7 @@ fun TripRatingSheet(
                     text = AppStrings.get("finish_and_submit", language),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = FarasBlack
+                    color = FarasWhite
                 )
             }
         }

@@ -21,15 +21,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -47,11 +44,14 @@ import androidx.compose.ui.unit.dp
 import com.example.data.AppLanguage
 import com.example.data.AppStrings
 import com.example.ui.theme.FarasAmber
-import com.example.ui.theme.FarasBlack
-import com.example.ui.theme.FarasCardBg
 import com.example.ui.theme.FarasCardBorder
+import com.example.ui.theme.FarasLightCard
+import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
-import com.example.ui.theme.FarasSurfaceDark
+import com.example.ui.theme.FarasNeonGreenDark
+import com.example.ui.theme.FarasNeonGreenLight
+import com.example.ui.theme.FarasSurfaceVariant
+import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
 import com.example.viewmodel.CustomerScreen
@@ -72,7 +72,7 @@ fun ProfileSettingsScreen(
     }
 
     Surface(
-        color = FarasBlack,
+        color = FarasLightGreyBg,
         modifier = modifier.fillMaxSize()
     ) {
         Column(
@@ -93,7 +93,7 @@ fun ProfileSettingsScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = FarasWhite
+                        tint = FarasTextPrimary
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -101,15 +101,15 @@ fun ProfileSettingsScreen(
                     text = AppStrings.get("profile_title", language),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = FarasWhite
+                    color = FarasTextPrimary
                 )
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // User Info Card
+            // User Info Card in Egypt
             Card(
-                colors = CardDefaults.cardColors(containerColor = FarasCardBg),
+                colors = CardDefaults.cardColors(containerColor = FarasWhite),
                 shape = RoundedCornerShape(20.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
                 modifier = Modifier.fillMaxWidth()
@@ -124,26 +124,26 @@ fun ProfileSettingsScreen(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(CircleShape)
-                            .background(FarasNeonGreen),
+                            .background(FarasNeonGreenLight),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = FarasBlack,
+                            tint = FarasNeonGreenDark,
                             modifier = Modifier.size(32.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
-                            text = if (language == AppLanguage.ARABIC) "محمد فاروق (عميل VIP)" else "Mohammed Farooq (VIP Customer)",
+                            text = if (language == AppLanguage.ARABIC) "م. فاروق زكي (مصر 🇪🇬)" else "Farooq Zaki (Egypt 🇪🇬)",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = FarasWhite
+                            color = FarasTextPrimary
                         )
                         Text(
-                            text = "+971 50 771 8822 • mf.z.hussein.pal@gmail.com",
+                            text = "+20 10 9876 5432 • mf.z.hussein.pal@gmail.com",
                             style = MaterialTheme.typography.labelSmall,
                             color = FarasTextSecondary
                         )
@@ -153,42 +153,58 @@ fun ProfileSettingsScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Multi-Language Switch Section (Mandatory from prompt)
+            // Multi-Language Switch Section (Exclusive to Profile Screen as requested)
             Card(
-                colors = CardDefaults.cardColors(containerColor = FarasCardBg),
+                colors = CardDefaults.cardColors(containerColor = FarasWhite),
                 shape = RoundedCornerShape(20.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, FarasNeonGreen.copy(alpha = 0.4f)),
+                border = androidx.compose.foundation.BorderStroke(1.5.dp, FarasNeonGreen.copy(alpha = 0.6f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Language,
-                            contentDescription = null,
-                            tint = FarasNeonGreen,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (language == AppLanguage.ARABIC) "إعدادات اللغة (Language Settings)" else "Language Settings",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = FarasWhite
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(FarasNeonGreenLight),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Language,
+                                contentDescription = null,
+                                tint = FarasNeonGreenDark,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "إعدادات لغة التطبيق" else "App Language Settings",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "يتم تغيير لغة التطبيق حصرياً من هنا" else "Change app language exclusively from here",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasNeonGreenDark
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = AppStrings.get("language_settings", language),
-                        style = MaterialTheme.typography.labelSmall,
+                        text = AppStrings.get("language_exclusive_notice", language),
+                        style = MaterialTheme.typography.bodySmall,
                         color = FarasTextSecondary
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
                     // Language Option: Arabic (Cairo)
-                    LanguageChoiceItem(
+                    LanguageChoiceItemLight(
                         title = AppStrings.get("arabic_option", language),
                         subtitle = "خط كابرو الشهير حصرياً مع دعم كامل للاتجاه من اليمين لليسار (RTL)",
                         isSelected = language == AppLanguage.ARABIC,
@@ -199,7 +215,7 @@ fun ProfileSettingsScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     // Language Option: English (Modern Sans)
-                    LanguageChoiceItem(
+                    LanguageChoiceItemLight(
                         title = AppStrings.get("english_option", language),
                         subtitle = "Clean modern sans-serif typography, matching Uber design standards",
                         isSelected = language == AppLanguage.ENGLISH,
@@ -211,9 +227,9 @@ fun ProfileSettingsScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Scooter Safety Standards & Rules Card
+            // Safety Standards in Egypt
             Card(
-                colors = CardDefaults.cardColors(containerColor = FarasCardBg),
+                colors = CardDefaults.cardColors(containerColor = FarasWhite),
                 shape = RoundedCornerShape(20.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
                 modifier = Modifier.fillMaxWidth()
@@ -223,7 +239,7 @@ fun ProfileSettingsScreen(
                         Icon(
                             imageVector = Icons.Default.Shield,
                             contentDescription = null,
-                            tint = FarasNeonGreen,
+                            tint = FarasNeonGreenDark,
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -231,41 +247,42 @@ fun ProfileSettingsScreen(
                             text = AppStrings.get("safety_title", language),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = FarasWhite
+                            color = FarasTextPrimary
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    SafetyRuleBullet(
-                        title = if (language == AppLanguage.ARABIC) "خوذة الركاب المعقمة" else "Sanitized Passenger Helmet",
-                        desc = if (language == AppLanguage.ARABIC) "يلتزم الكابتن تشغيلياً بتوفير خوذة إضافية معقمة مطابقة لمعايير السلامة لارتدائها طوال الرحلة." else "Captain strictly provides a sanitized safety helmet for the passenger."
+                    SafetyRuleBulletLight(
+                        title = if (language == AppLanguage.ARABIC) "خوذة الركاب المعقمة إجبارية" else "Sanitized Passenger Helmet",
+                        desc = if (language == AppLanguage.ARABIC) "يلتزم كابتن السكوتر تشغيلياً بتوفير خوذة إضافية معقمة مطابقة للمواصفات ليرتديها الراكب طوال المشوار." else "Captain strictly provides a sanitized safety helmet for the passenger."
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    SafetyRuleBullet(
+                    SafetyRuleBulletLight(
                         title = if (language == AppLanguage.ARABIC) "الحد الأقصى للطرود 15 كجم" else "15 kg Cargo Max Weight",
-                        desc = if (language == AppLanguage.ARABIC) "لا تتجاوز الأبعاد السعة الاستيعابية للصندوق الخلفي القياسي المبتكر للسكوتر." else "Cargo box max capacity strictly capped at 15kg for balance and safety."
+                        desc = if (language == AppLanguage.ARABIC) "لضمان ثبات السكوتر في شوارع مصر، سعة الصندوق محددة بحد أقصى 15 كجم." else "Cargo box max capacity strictly capped at 15kg for balance and safety."
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    SafetyRuleBullet(
+                    SafetyRuleBulletLight(
                         title = if (language == AppLanguage.ARABIC) "زر استغاثة الطوارئ SOS" else "SOS Emergency Dispatch",
-                        desc = if (language == AppLanguage.ARABIC) "متاح دائماً على شاشة الرحلة مع تتبع مباشر للعمليات وتنبيه الطوارئ." else "Always accessible on active trips with instant control room GPS broadcast."
+                        desc = if (language == AppLanguage.ARABIC) "مرتبط مباشرة بغرفة عمليات مصر وشرطة النجدة (122)." else "Directly linked to Central Operations and Egypt Police (122)."
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Navigation to Trips History
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(FarasCardBg)
+                    .background(FarasWhite)
+                    .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
                     .clickable { viewModel.setCustomerScreen(CustomerScreen.HISTORY) }
                     .padding(16.dp)
                     .testTag("nav_to_history_btn")
@@ -276,13 +293,13 @@ fun ProfileSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.History, contentDescription = null, tint = FarasNeonGreen)
+                        Icon(Icons.Default.History, contentDescription = null, tint = FarasNeonGreenDark)
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = AppStrings.get("trips_history", language),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = FarasWhite
+                            color = FarasTextPrimary
                         )
                     }
                     Text(
@@ -297,7 +314,7 @@ fun ProfileSettingsScreen(
 }
 
 @Composable
-private fun LanguageChoiceItem(
+private fun LanguageChoiceItemLight(
     title: String,
     subtitle: String,
     isSelected: Boolean,
@@ -308,9 +325,9 @@ private fun LanguageChoiceItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(if (isSelected) FarasNeonGreen.copy(alpha = 0.12f) else FarasSurfaceDark)
+            .background(if (isSelected) FarasNeonGreenLight else FarasLightGreyBg)
             .border(
-                width = if (isSelected) 1.5.dp else 1.dp,
+                width = if (isSelected) 2.dp else 1.dp,
                 color = if (isSelected) FarasNeonGreen else FarasCardBorder,
                 shape = RoundedCornerShape(14.dp)
             )
@@ -328,7 +345,7 @@ private fun LanguageChoiceItem(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (isSelected) FarasNeonGreen else FarasWhite
+                    color = if (isSelected) FarasNeonGreenDark else FarasTextPrimary
                 )
                 Text(
                     text = subtitle,
@@ -341,8 +358,8 @@ private fun LanguageChoiceItem(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Selected",
-                    tint = FarasNeonGreen,
-                    modifier = Modifier.size(20.dp)
+                    tint = FarasNeonGreenDark,
+                    modifier = Modifier.size(22.dp)
                 )
             }
         }
@@ -350,7 +367,7 @@ private fun LanguageChoiceItem(
 }
 
 @Composable
-private fun SafetyRuleBullet(
+private fun SafetyRuleBulletLight(
     title: String,
     desc: String
 ) {
@@ -358,9 +375,9 @@ private fun SafetyRuleBullet(
         Box(
             modifier = Modifier
                 .padding(top = 5.dp)
-                .size(6.dp)
+                .size(7.dp)
                 .clip(CircleShape)
-                .background(FarasNeonGreen)
+                .background(FarasNeonGreenDark)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Column {
@@ -368,7 +385,7 @@ private fun SafetyRuleBullet(
                 text = title,
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Bold,
-                color = FarasWhite
+                color = FarasTextPrimary
             )
             Text(
                 text = desc,
