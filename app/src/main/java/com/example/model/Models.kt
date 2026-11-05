@@ -9,7 +9,8 @@ enum class ServiceType(val code: String) {
 enum class PaymentMethod(val code: String) {
     CASH("cash"),
     WALLET("wallet"),
-    CREDIT_CARD("credit_card")
+    CREDIT_CARD("credit_card"),
+    E_WALLET("e_wallet") // Electronic Wallets: Vodafone Cash, InstaPay, etc.
 }
 
 enum class TripStatus {
@@ -49,7 +50,7 @@ data class Captain(
     val totalRides: Int,
     val plateNumber: String,
     val scooterModel: String,
-    val avatarColorHex: Long = 0xFF00C853,
+    val avatarColorHex: Long = 0xFF00B44A,
     val isVerified: Boolean = true,
     val hasSanitizedHelmet: Boolean = true,
     val nationalId: String = "29408150102938",
@@ -57,11 +58,54 @@ data class Captain(
     val criminalRecordClean: Boolean = true
 )
 
+data class SavedCard(
+    val id: String,
+    val cardNumberMasked: String,
+    val cardHolder: String,
+    val expiry: String,
+    val cardBrand: String = "Visa", // Visa, Mastercard, Meeza
+    val isDefault: Boolean = false
+)
+
+data class SavedWallet(
+    val id: String,
+    val provider: String, // "فودافون كاش", "إنستاباي InstaPay", "أورنج كاش", "اتصالات كاش"
+    val walletNumber: String,
+    val isDefault: Boolean = false
+)
+
+data class ComplaintTicket(
+    val id: String,
+    val tripId: String,
+    val captainName: String,
+    val category: String, // "سلوك الكابتن", "عدم توفير خوذة", "احتساب أجرة زيادة", "فقدان غرض", "أخرى"
+    val description: String,
+    val date: String,
+    val status: String = "قيد المراجعة من الدعم"
+)
+
+data class ContactInvite(
+    val id: String,
+    val name: String,
+    val phoneNumber: String,
+    var isInvited: Boolean = false
+)
+
+data class UserProfile(
+    val name: String = "محمد فاروق",
+    val phoneNumber: String = "01098765432",
+    val email: String = "mf.z.hussein.pal@gmail.com",
+    val isLoggedIn: Boolean = true,
+    val referralCode: String = "FARE50",
+    val referralEarningsEgp: Double = 150.0,
+    val completedRidesCount: Int = 18
+)
+
 data class CaptainNeedRequest(
     val id: String,
     val captainName: String,
     val captainPhone: String,
-    val category: String, // "خوذة جديدة", "صيانة سكوتر", "بطارية إضافية", "مكافأة تميز"
+    val category: String,
     val description: String,
     val date: String,
     var isFulfilled: Boolean = false
@@ -70,8 +114,8 @@ data class CaptainNeedRequest(
 data class DeviceDownloadRecord(
     val id: String,
     val deviceModel: String,
-    val osType: String, // "Android 15", "iOS 18"
-    val governorate: String, // "القاهرة", "الجيزة", "الإسكندرية", "المنصورة"
+    val osType: String,
+    val governorate: String,
     val appVersion: String,
     val downloadDate: String,
     val isOnline: Boolean
@@ -79,7 +123,7 @@ data class DeviceDownloadRecord(
 
 data class AiMarketingCampaign(
     val id: String,
-    val platform: String, // "Facebook", "TikTok", "Instagram", "X (Twitter)"
+    val platform: String,
     val targetArea: String,
     val headline: String,
     val dialectCaption: String,
@@ -101,10 +145,12 @@ data class PlaceItem(
 )
 
 data class PackageDetails(
-    val description: String = "",
-    val receiverName: String = "",
-    val receiverPhone: String = "",
-    val weightKg: Float = 3.5f
+    val pickupLocation: String = "مقر العمل - التحرير، وسط البلد",
+    val deliveryLocation: String = "المهندسين، شارع جامعة الدول",
+    val description: String = "مستندات عمل وعقد بيع معتمد",
+    val receiverName: String = "أحمد فؤاد الشافعي",
+    val receiverPhone: String = "01098765432",
+    val weightKg: Float = 2.5f
 )
 
 data class ErrandDetails(
@@ -163,6 +209,8 @@ data class TripOrder(
     val errandDetails: ErrandDetails? = null,
     val rating: Int = 0,
     val tipAmount: Double = 0.0,
+    val discountAmount: Double = 0.0,
     val sosAlert: SOSAlert? = null,
-    val chatMessages: List<ChatMessage> = emptyList()
+    val chatMessages: List<ChatMessage> = emptyList(),
+    val complaint: ComplaintTicket? = null
 )

@@ -7,17 +7,22 @@ import com.example.model.AiMarketingCampaign
 import com.example.model.Captain
 import com.example.model.CaptainNeedRequest
 import com.example.model.ChatMessage
+import com.example.model.ComplaintTicket
+import com.example.model.ContactInvite
 import com.example.model.DeviceDownloadRecord
 import com.example.model.ErrandDetails
 import com.example.model.PackageDetails
 import com.example.model.PaymentMethod
 import com.example.model.PlaceItem
 import com.example.model.SOSAlert
+import com.example.model.SavedCard
+import com.example.model.SavedWallet
 import com.example.model.ScooterLocation
 import com.example.model.ScooterVsCarComparison
 import com.example.model.ServiceType
 import com.example.model.TripOrder
 import com.example.model.TripStatus
+import com.example.model.UserProfile
 import com.example.model.WalletTransaction
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -34,7 +39,6 @@ import kotlin.random.Random
 enum class AppMode {
     CUSTOMER,
     CAPTAIN,
-    WEB_PORTAL,
     ADMIN
 }
 
@@ -57,12 +61,63 @@ data class FarascooterUiState(
     val currentMode: AppMode = AppMode.CUSTOMER,
     val customerScreen: CustomerScreen = CustomerScreen.HOME,
 
+    // Auth & Permissions State
+    val isAuthCompleted: Boolean = true,
+    val hasPermissionsGranted: Boolean = true,
+    val userProfile: UserProfile = UserProfile(),
+
+    // Popups & Dialogs
+    val showPaymentSheet: Boolean = false,
+    val showReferralDialog: Boolean = false,
+    val showComplaintsSheet: Boolean = false,
+    val complaintTargetTripId: String? = null,
+    val complaintTargetCaptainName: String? = null,
+    val selectedTripForDetail: TripOrder? = null,
+
+    // Exact Pickup Spot (Customer can pin location)
+    val exactPickupAddress: String = "ميدان التحرير، أمام مجمع التحرير، وسط البلد",
+    val exactPickupXRatio: Float = 0.49f,
+    val exactPickupYRatio: Float = 0.52f,
+
     // Wallet in EGP (جنيه مصري)
     val walletBalance: Double = 350.0,
     val walletTransactions: List<WalletTransaction> = listOf(
         WalletTransaction("w1", "شحن رصيد - فوري / ميزة", "Top-up - Fawry / Meeza", 200.0, true, "اليوم 10:15 ص"),
         WalletTransaction("w2", "مشوار سكوتر - وسط البلد ➔ الزمالك", "Scooter Ride - Downtown ➔ Zamalek", 28.0, false, "أمس 07:30 م"),
         WalletTransaction("w3", "توصيل طرد مستندات - المعادي", "Package Delivery - Maadi", 35.0, false, "3 نوفمبر")
+    ),
+
+    // Saved Bank Cards (Online 1-click payment)
+    val savedCards: List<SavedCard> = listOf(
+        SavedCard("c1", "•••• •••• •••• 4412", "MOHAMED FAROUK", "08/28", "Visa", isDefault = true),
+        SavedCard("c2", "•••• •••• •••• 9031", "MOHAMED FAROUK", "11/27", "Mastercard", isDefault = false)
+    ),
+
+    // Saved Electronic Wallets (Vodafone Cash, InstaPay, Orange Money, Etisalat Cash)
+    val savedWallets: List<SavedWallet> = listOf(
+        SavedWallet("sw1", "فودافون كاش (Vodafone Cash)", "01098765432", isDefault = true),
+        SavedWallet("sw2", "إنستاباي (InstaPay Egypt)", "mf.farouk@instapay", isDefault = false)
+    ),
+
+    // Complaint & Support Tickets
+    val complaintTickets: List<ComplaintTicket> = listOf(
+        ComplaintTicket(
+            id = "TKT-8120",
+            tripId = "FS-EG-1029",
+            captainName = "كابتن سيف الدين المصري",
+            category = "سلوك الكابتن أو القيادة غير الآمنة",
+            description = "الكابتن كان مسرعاً قليلاً في كوبري قصر النيل، أرجو التنبيه بضرورة الالتزام بالسرعة القانونية.",
+            date = "أمس 08:15 م",
+            status = "تمت المراجعة والحل بنجاح"
+        )
+    ),
+
+    // Contacts for Referral Invites
+    val contactInvites: List<ContactInvite> = listOf(
+        ContactInvite("ci1", "أحمد الشريف", "01011223344", isInvited = false),
+        ContactInvite("ci2", "محمود فوزي", "01122334455", isInvited = true),
+        ContactInvite("ci3", "م. كريم طارق", "01233445566", isInvited = false),
+        ContactInvite("ci4", "سارة إبراهيم", "01544556677", isInvited = false)
     ),
 
     // Active nearby scooters in Cairo / Giza
@@ -105,8 +160,10 @@ data class FarascooterUiState(
     val showSosConfirmDialog: Boolean = false,
     val sosAlertNotification: String? = null,
 
-    // Package & Errand Drafts in Egypt
+    // Package & Errand Drafts
     val packageDraft: PackageDetails = PackageDetails(
+        pickupLocation = "مقر العمل - التحرير، وسط البلد",
+        deliveryLocation = "المهندسين، شارع جامعة الدول العربية",
         description = "مستندات عمل وعقد بيع معتمد",
         receiverName = "أحمد فؤاد الشافعي",
         receiverPhone = "01098765432",
@@ -118,7 +175,7 @@ data class FarascooterUiState(
         estimatedBudget = 110.0
     ),
 
-    // Driver / Captain Mode State (Egypt)
+    // Driver / Captain Mode State
     val isDriverOnline: Boolean = true,
     val driverTodayEarnings: Double = 420.0,
     val driverCompletedCount: Int = 11,
@@ -126,11 +183,11 @@ data class FarascooterUiState(
     val driverOrderCountdown: Int = 30,
     val driverHelmetConfirmed: Boolean = true,
 
-    // Admin Dashboard: Captains in Egypt
+    // Captains in Egypt
     val captainsList: List<Captain> = listOf(
-        Captain("c1", "كابتن سيف الدين المصري", "01012345678", 4.96f, 1420, "ق هـ د 4192", "Xiaomi Pro Max Ultra (45 كم/س)", 0xFF00C853, isVerified = true),
+        Captain("c1", "كابتن سيف الدين المصري", "01012345678", 4.96f, 1420, "ق هـ د 4192", "Xiaomi Pro Max Ultra (45 كم/س)", 0xFF00B44A, isVerified = true),
         Captain("c2", "كابتن أحمد شحاتة", "01123456789", 4.91f, 890, "ج ي ر 8821", "Ninebot Segway GT2", 0xFF2563EB, isVerified = true),
-        Captain("c3", "كابتن كريم حسن", "01234567890", 4.88f, 740, "س ن م 3314", "Kaabo Mantis King", 0xFF00C853, isVerified = true),
+        Captain("c3", "كابتن كريم حسن", "01234567890", 4.88f, 740, "س ن م 3314", "Kaabo Mantis King", 0xFF00B44A, isVerified = true),
         Captain("c4", "كابتن محمود إبراهيم (جديد)", "01545678901", 4.75f, 28, "ط ع ف 9901", "Dualtron Spider", 0xFFD97706, isVerified = false)
     ),
 
@@ -151,40 +208,18 @@ data class FarascooterUiState(
         DeviceDownloadRecord("d5", "Realme 12 Pro+", "Android 14", "المنصورة - حي الجامعة", "v2.4.0", "اليوم 08:30 ص", false)
     ),
 
-    // AI Marketing Campaigns (Dialect & Social Channels)
+    // AI Marketing Campaigns
     val aiMarketingCampaigns: List<AiMarketingCampaign> = listOf(
         AiMarketingCampaign(
             id = "ai1",
             platform = "Facebook",
             targetArea = "كوبري أكتوبر والمحور والدائري (القاهرة والجيزة)",
             headline = "زهقت من وقفة كوبري أكتوبر والحر؟ 🥵",
-            dialectCaption = "ليه تضيع ساعتين من يومك في زحمة التاكسي والعربيات؟ فارسكوتر بيوصلك في نص الوقت وبنص التكلفة! استخدم بروموكود (OCTOBER20) وخد خصم 20% على أول مشوارين 🛵💨",
-            hashtags = "#فارسكوتر_مصر #اهرب_من_الزحمة #سكوتر_القاهرة #مشاوير_مصر",
+            dialectCaption = "ليه تضيع ساعتين من يومك في زحمة التاكسي والعربيات؟ FareScooter بيوصلك في نص الوقت وبنص التكلفة! استخدم بروموكود (FARE50) وخد خصم 50 ج.م على رحلتك 🛵💨",
+            hashtags = "#FareScooter #اهرب_من_الزحمة #سكوتر_القاهرة #مشاوير_مصر",
             suggestedBudgetEgp = 3500,
             estimatedReach = "140,000 مستخدم في القاهرة الكبرى",
             createdTime = "اليوم"
-        ),
-        AiMarketingCampaign(
-            id = "ai2",
-            platform = "TikTok",
-            targetArea = "الجامعات (جامعة القاهرة، عين شمس، الجامعة الأمريكية)",
-            headline = "تحدي السكوتر vs التاكسي في شوارع مصر ⏱️",
-            dialectCaption = "صورنا ريل لايف: مين هيوصل أسرع من وسط البلد للزمالك في ساعة الذروة؟ السكوتر كسب بفارق 22 دقيقة! حمل التطبيق وخليك أذكى في مواصلاتك 😎",
-            hashtags = "#تيك_توك_مصر #تحدي_السكوتر #زحمة_مصر #فارسكوتر",
-            suggestedBudgetEgp = 2800,
-            estimatedReach = "210,000 مشاهدة (Gen Z)",
-            createdTime = "أمس"
-        ),
-        AiMarketingCampaign(
-            id = "ai3",
-            platform = "Instagram",
-            targetArea = "الزمالك، المعادي، الشيخ زايد والتجمع",
-            headline = "طردك يوصل في نفس الساعة مع فارسكوتر 📦",
-            dialectCaption = "مستندات، هدايا، أو حاجات نسيتها في الشغل؟ كابتن فارسكوتر هيوصلها بسرعة وأمان بصندوق معقم حتى 15 كجم بأوفر تسعيرة في مصر ⚡",
-            hashtags = "#دليفري_سريع #توصيل_طرود_مصر #فارسكوتر_شحن",
-            suggestedBudgetEgp = 2000,
-            estimatedReach = "95,000 مهتم بالتجارة والخدمات",
-            createdTime = "3 نوفمبر"
         )
     ),
 
@@ -202,7 +237,6 @@ class FarascooterViewModel : ViewModel() {
     private var riderMovementJob: Job? = null
 
     init {
-        // Detect system language: Arabic if preferred, else English
         val defaultLocale = Locale.getDefault().language
         val initialLang = if (defaultLocale.startsWith("ar")) AppLanguage.ARABIC else AppLanguage.ENGLISH
         _uiState.update { it.copy(language = initialLang) }
@@ -235,13 +269,150 @@ class FarascooterViewModel : ViewModel() {
         _uiState.update { it.copy(language = lang) }
     }
 
-    // Mode Switch (Customer, Captain, Web Portal, Admin)
+    // Mode Switch (Customer, Captain, Admin)
     fun setAppMode(mode: AppMode) {
         _uiState.update { it.copy(currentMode = mode) }
     }
 
     fun setCustomerScreen(screen: CustomerScreen) {
         _uiState.update { it.copy(customerScreen = screen) }
+    }
+
+    // Auth & Permissions
+    fun loginWithOtp(name: String, phone: String, email: String) {
+        _uiState.update {
+            it.copy(
+                isAuthCompleted = true,
+                userProfile = it.userProfile.copy(
+                    name = name,
+                    phoneNumber = phone,
+                    email = email,
+                    isLoggedIn = true
+                )
+            )
+        }
+    }
+
+    fun skipAuthAsGuest() {
+        _uiState.update { it.copy(isAuthCompleted = true) }
+    }
+
+    fun completePermissions() {
+        _uiState.update { it.copy(hasPermissionsGranted = true) }
+    }
+
+    fun logout() {
+        _uiState.update {
+            it.copy(
+                isAuthCompleted = false,
+                customerScreen = CustomerScreen.HOME
+            )
+        }
+    }
+
+    // Exact Location Pinning
+    fun setExactPickupLocation(address: String, xRatio: Float = 0.49f, yRatio: Float = 0.52f) {
+        _uiState.update {
+            it.copy(
+                exactPickupAddress = address,
+                exactPickupXRatio = xRatio,
+                exactPickupYRatio = yRatio
+            )
+        }
+    }
+
+    fun pinCurrentLocationGps() {
+        val cairoSpots = listOf(
+            "ميدان التحرير، أمام مجمع التحرير" to (0.49f to 0.52f),
+            "الزمالك، شارع 26 يوليو بجوار نفق الجزيرة" to (0.44f to 0.48f),
+            "المهندسين، تقاطع شارع جامعة الدول مع سوريا" to (0.32f to 0.45f),
+            "الدقي، أمام محطة المترو والبحوث" to (0.38f to 0.50f),
+            "المعادي، شارع 9 أمام محطة المترو" to (0.46f to 0.75f)
+        )
+        val spot = cairoSpots.random()
+        setExactPickupLocation(spot.first, spot.second.first, spot.second.second)
+    }
+
+    // Dialog & Sheet Toggles
+    fun togglePaymentSheet(show: Boolean) {
+        _uiState.update { it.copy(showPaymentSheet = show) }
+    }
+
+    fun toggleReferralDialog(show: Boolean) {
+        _uiState.update { it.copy(showReferralDialog = show) }
+    }
+
+    fun toggleComplaintsSheet(show: Boolean, tripId: String? = null, captainName: String? = null) {
+        _uiState.update {
+            it.copy(
+                showComplaintsSheet = show,
+                complaintTargetTripId = tripId,
+                complaintTargetCaptainName = captainName
+            )
+        }
+    }
+
+    fun openTripDetail(trip: TripOrder) {
+        _uiState.update { it.copy(selectedTripForDetail = trip) }
+    }
+
+    fun dismissTripDetail() {
+        _uiState.update { it.copy(selectedTripForDetail = null) }
+    }
+
+    // Payment Methods Handlers
+    fun addSavedCard(card: SavedCard) {
+        _uiState.update {
+            val updated = it.savedCards.map { c -> c.copy(isDefault = false) } + card
+            it.copy(
+                savedCards = updated,
+                selectedPaymentMethod = PaymentMethod.CREDIT_CARD
+            )
+        }
+    }
+
+    fun setDefaultCard(cardId: String) {
+        _uiState.update { state ->
+            val updated = state.savedCards.map { c ->
+                c.copy(isDefault = c.id == cardId)
+            }
+            state.copy(savedCards = updated)
+        }
+    }
+
+    fun addSavedWallet(wallet: SavedWallet) {
+        _uiState.update {
+            val updated = it.savedWallets.map { w -> w.copy(isDefault = false) } + wallet
+            it.copy(
+                savedWallets = updated,
+                selectedPaymentMethod = PaymentMethod.E_WALLET
+            )
+        }
+    }
+
+    // Complaints Submission
+    fun submitComplaint(ticket: ComplaintTicket) {
+        _uiState.update {
+            it.copy(
+                complaintTickets = listOf(ticket) + it.complaintTickets
+            )
+        }
+    }
+
+    // Referral Contacts
+    fun inviteContact(contactId: String) {
+        _uiState.update { state ->
+            val updated = state.contactInvites.map { ci ->
+                if (ci.id == contactId) ci.copy(isInvited = true) else ci
+            }
+            val profile = state.userProfile.copy(
+                referralEarningsEgp = state.userProfile.referralEarningsEgp + 50.0
+            )
+            state.copy(
+                contactInvites = updated,
+                userProfile = profile
+            )
+        }
     }
 
     fun selectDestination(place: PlaceItem) {
@@ -308,12 +479,11 @@ class FarascooterViewModel : ViewModel() {
         setCustomerScreen(CustomerScreen.CONFIRM_ORDER)
     }
 
-    // Request Order with Egypt Fare & Scooter vs Car Comparison
+    // Request Order with Exact Pickup Pinning & Egypt Fare Calculation
     fun requestOrder() {
         val dest = _uiState.value.selectedDestination ?: _uiState.value.popularPlaces[0]
         val service = _uiState.value.selectedServiceType
 
-        // Rates in EGP
         val scooterBase = when (service) {
             ServiceType.RIDE -> 12.0
             ServiceType.SEND_PACKAGE -> 10.0
@@ -321,7 +491,6 @@ class FarascooterViewModel : ViewModel() {
         }
         val distanceKm = dest.distanceKm
 
-        // Scooter vs Car Algorithm in congested Egypt traffic:
         val scooterDurationMin = (distanceKm * 2.2).toInt().coerceAtLeast(5)
         val carDurationMin = (distanceKm * 4.8).toInt().coerceAtLeast(15)
         val timeSavedMin = carDurationMin - scooterDurationMin
@@ -346,10 +515,10 @@ class FarascooterViewModel : ViewModel() {
         val trip = TripOrder(
             id = "FS-EG-${Random.nextInt(1000, 9999)}",
             serviceType = service,
-            pickupAddress = if (_uiState.value.language == AppLanguage.ARABIC) "ميدان التحرير، وسط البلد، القاهرة" else "Tahrir Square, Downtown, Cairo",
+            pickupAddress = _uiState.value.exactPickupAddress,
             destinationAddress = if (_uiState.value.language == AppLanguage.ARABIC) dest.nameAr else dest.nameEn,
-            pickupXRatio = 0.49f,
-            pickupYRatio = 0.52f,
+            pickupXRatio = _uiState.value.exactPickupXRatio,
+            pickupYRatio = _uiState.value.exactPickupYRatio,
             destXRatio = dest.xRatio,
             destYRatio = dest.yRatio,
             distanceKm = distanceKm,
@@ -366,7 +535,7 @@ class FarascooterViewModel : ViewModel() {
             packageDetails = if (service == ServiceType.SEND_PACKAGE) _uiState.value.packageDraft else null,
             errandDetails = if (service == ServiceType.BUY_AND_GET) _uiState.value.errandDraft else null,
             chatMessages = listOf(
-                ChatMessage("m1", false, if (_uiState.value.language == AppLanguage.ARABIC) "مساء الخير يا فندم، أنا الكابتن سيف في طريقي ليك، والخوذة المعقمة جاهزة." else "Hello, Captain Saif on my way with sanitized helmet ready.", "الآن")
+                ChatMessage("m1", false, if (_uiState.value.language == AppLanguage.ARABIC) "مساء الخير يا فندم، أنا الكابتن سيف في طريقي ليك إلى موقعك، والخوذة المعقمة جاهزة." else "Hello, Captain Saif on my way to your pinned spot with sanitized helmet ready.", "الآن")
             )
         )
 
@@ -550,7 +719,7 @@ class FarascooterViewModel : ViewModel() {
         viewModelScope.launch {
             delay(1500)
             val replyText = if (_uiState.value.language == AppLanguage.ARABIC) {
-                "تمام يا فندم، أنا عديت من كوبري قصر النيل وفي شارعك خلال دقيقتين. 🛵"
+                "تمام يا فندم، أنا عديت من كوبري قصر النيل وفي شارعك عند موقعك خلال دقيقتين. 🛵"
             } else {
                 "Got it, crossed Qasr El Nil bridge, at your location in 2 minutes. 🛵"
             }
@@ -582,7 +751,7 @@ class FarascooterViewModel : ViewModel() {
             timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date()),
             locationDescription = "القاهرة - كوبري 6 أكتوبر (إحداثيات 30.0444° N, 31.2357° E)",
             captainName = trip?.captain?.name ?: "كابتن سيف الدين",
-            customerName = "عميل فارسكوتر مصر",
+            customerName = "عميل FareScooter",
             status = "ACTIVE_DISPATCHED"
         )
 
@@ -682,15 +851,15 @@ class FarascooterViewModel : ViewModel() {
         val selectedPlatform = platforms.random()
 
         val headlines = listOf(
-            "زحمة كوبري قصر النيل وميدان الجيزة؟ انساها مع فارسكوتر! ⚡",
+            "زحمة كوبري قصر النيل وميدان الجيزة؟ انساها مع FareScooter! ⚡",
             "سكوتر سريع تحت الطلب يوصلك في نص الوقت وبنص التكلفة 🛵",
-            "الخوذة جاهزة، والسكوتر على الباب.. اطلب مشوارك الآن في القاهرة! 🇪🇬",
+            "الخوذة جاهزة، والسكوتر على الباب.. اطلب مشوارك الآن في القاهرة!",
             "وفر وقت الشغل والجامعة.. ليه تقف ساعة في المحور لما ممكن توصل في 14 دقيقة؟"
         )
         val captions = listOf(
-            "ماتخليش الزحمة تعطل يومك! مع فارسكوتر، الكابتن بيجيلك في دقائق وياخدك لأي مكان في القاهرة والجيزة بأسرع طريق وأعلى أمان. كود خصم (MASR25) مستنيك! 🚀",
-            "لو رايح الجامعة أو الشغل في ساعة الذروة، وفر فلوسك ووقتك واطلب مشوار فارسكوتر. خوذة معقمة مجانية وكابتن محترف بانتظارك دايماً 🛡️",
-            "عايز تبعت أوراق مهمة أو طلب مستعجل؟ خدمة إرسال الطرود بالسكوتر بتضمنلك وصول أمان حتى 15 كجم بأسرع وقت في مصر 📦"
+            "ماتخليش الزحمة تعطل يومك! مع FareScooter، الكابتن بيجيلك في دقائق وياخدك لأي مكان في القاهرة والجيزة بأسرع طريق وأعلى أمان. كود خصم (FARE50) مستنيك! 🚀",
+            "لو رايح الجامعة أو الشغل في ساعة الذروة، وفر فلوسك ووقتك واطلب مشوار FareScooter. خوذة معقمة مجانية وكابتن محترف بانتظارك دايماً 🛡️",
+            "عايز تبعت أوراق مهمة أو طلب مستعجل؟ خدمة إرسال الطرود بالسكوتر بتضمنلك وصول أمان حتى 15 كجم بأسرع وقت 📦"
         )
 
         val newCampaign = AiMarketingCampaign(
@@ -699,7 +868,7 @@ class FarascooterViewModel : ViewModel() {
             targetArea = "القاهرة، الجيزة، الإسكندرية (المناطق المزدحمة)",
             headline = headlines.random(),
             dialectCaption = captions.random(),
-            hashtags = "#فارسكوتر_مصر #مواصلات_القاهرة #أسرع_سكوتر #تخطي_الزحمة",
+            hashtags = "#FareScooter #مواصلات_القاهرة #أسرع_سكوتر #تخطي_الزحمة",
             suggestedBudgetEgp = Random.nextInt(1500, 4500),
             estimatedReach = "${Random.nextInt(80, 250)},000 مستخدم مستهدف",
             createdTime = "الآن"

@@ -3,6 +3,7 @@ package com.example.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ElectricScooter
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocalMall
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -91,12 +93,19 @@ fun TripHistoryScreen(
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = AppStrings.get("trips_history", language),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = FarasTextPrimary
-                )
+                Column {
+                    Text(
+                        text = AppStrings.get("trips_history", language),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasTextPrimary
+                    )
+                    Text(
+                        text = if (language == AppLanguage.ARABIC) "اضغط على أي مشوار لعرض تفاصيل الإيصال المالي أو تقديم شكوى" else "Tap any trip to view receipt details or report an issue",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = FarasTextSecondary
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -157,7 +166,11 @@ fun TripHistoryScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(trips) { trip ->
-                    TripReceiptCardLight(trip = trip, language = language)
+                    TripReceiptCardLight(
+                        trip = trip,
+                        language = language,
+                        onClick = { viewModel.openTripDetail(trip) }
+                    )
                 }
             }
         }
@@ -167,7 +180,8 @@ fun TripHistoryScreen(
 @Composable
 private fun TripReceiptCardLight(
     trip: TripOrder,
-    language: AppLanguage
+    language: AppLanguage,
+    onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -175,7 +189,9 @@ private fun TripReceiptCardLight(
             .clip(RoundedCornerShape(16.dp))
             .background(FarasWhite)
             .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
+            .clickable { onClick() }
             .padding(16.dp)
+            .testTag("trip_card_${trip.id}")
     ) {
         Column {
             Row(
@@ -222,12 +238,21 @@ private fun TripReceiptCardLight(
                     }
                 }
 
-                Text(
-                    text = "${trip.finalFare} ${AppStrings.get("currency", language)}",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = FarasNeonGreenDark
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${trip.finalFare} ${AppStrings.get("currency", language)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasNeonGreenDark
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.Receipt,
+                        contentDescription = "Receipt",
+                        tint = FarasTextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))

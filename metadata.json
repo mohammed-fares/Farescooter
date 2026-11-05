@@ -1,6 +1,6 @@
 {
-  "name": "فارسكوتر Farascooter",
-  "description": "تطبيق فارسكوتر - Farascooter: تجربة أوبر الفاخرة لرحلات وتوصيل السكوتر السريع والموثوق",
+  "name": "FareScooter",
+  "description": "تطبيق FareScooter: المنصة الذكية لرحلات وتوصيل السكوتر السريع والموثوق وتجاوز الزحام",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

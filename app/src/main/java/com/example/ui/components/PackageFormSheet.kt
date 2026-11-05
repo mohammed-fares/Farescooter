@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
@@ -59,6 +62,10 @@ fun PackageFormSheet(
     onConfirm: (PackageDetails) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scrollState = rememberScrollState()
+
+    var pickupLocation by remember { mutableStateOf(initialDraft.pickupLocation) }
+    var deliveryLocation by remember { mutableStateOf(initialDraft.deliveryLocation) }
     var description by remember { mutableStateOf(initialDraft.description) }
     var receiverName by remember { mutableStateOf(initialDraft.receiverName) }
     var receiverPhone by remember { mutableStateOf(initialDraft.receiverPhone) }
@@ -75,6 +82,7 @@ fun PackageFormSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
+                .verticalScroll(scrollState)
         ) {
             // Header with Back
             Row(
@@ -137,7 +145,41 @@ fun PackageFormSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Description Field
+            // 1. Pickup Location (مكان استلام الطرد)
+            OutlinedTextField(
+                value = pickupLocation,
+                onValueChange = { pickupLocation = it },
+                label = { Text(AppStrings.get("package_pickup_loc", language)) },
+                leadingIcon = {
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasNeonGreenDark)
+                },
+                colors = textFieldColorsLight(),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("package_pickup_input")
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 2. Dropoff Delivery Location (مكان تسليم الطرد)
+            OutlinedTextField(
+                value = deliveryLocation,
+                onValueChange = { deliveryLocation = it },
+                label = { Text(AppStrings.get("package_dropoff_loc", language)) },
+                leadingIcon = {
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasAmber)
+                },
+                colors = textFieldColorsLight(),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("package_dropoff_input")
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 3. Description Field
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
@@ -154,7 +196,7 @@ fun PackageFormSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Receiver Name Field
+            // 4. Receiver Name Field
             OutlinedTextField(
                 value = receiverName,
                 onValueChange = { receiverName = it },
@@ -171,7 +213,7 @@ fun PackageFormSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Receiver Phone Field
+            // 5. Receiver Phone Field
             OutlinedTextField(
                 value = receiverPhone,
                 onValueChange = { receiverPhone = it },
@@ -194,6 +236,8 @@ fun PackageFormSheet(
                     val w = weightKg.toFloatOrNull() ?: 2.5f
                     onConfirm(
                         PackageDetails(
+                            pickupLocation = pickupLocation,
+                            deliveryLocation = deliveryLocation,
                             description = description,
                             receiverName = receiverName,
                             receiverPhone = receiverPhone,

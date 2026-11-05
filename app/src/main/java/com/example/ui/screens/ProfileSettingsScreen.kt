@@ -21,12 +21,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,19 +42,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.data.AppLanguage
 import com.example.data.AppStrings
 import com.example.ui.theme.FarasAmber
+import com.example.ui.theme.FarasAmberBg
 import com.example.ui.theme.FarasCardBorder
-import com.example.ui.theme.FarasLightCard
 import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
 import com.example.ui.theme.FarasNeonGreenDark
 import com.example.ui.theme.FarasNeonGreenLight
-import com.example.ui.theme.FarasSurfaceVariant
+import com.example.ui.theme.FarasRedAlert
 import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
@@ -107,7 +112,7 @@ fun ProfileSettingsScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // User Info Card in Egypt
+            // User Info Card (Clean, no country flag)
             Card(
                 colors = CardDefaults.cardColors(containerColor = FarasWhite),
                 shape = RoundedCornerShape(20.dp),
@@ -135,21 +140,142 @@ fun ProfileSettingsScreen(
                         )
                     }
                     Spacer(modifier = Modifier.width(14.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (language == AppLanguage.ARABIC) "م. فاروق زكي (مصر 🇪🇬)" else "Farooq Zaki (Egypt 🇪🇬)",
+                            text = uiState.userProfile.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = FarasTextPrimary
                         )
                         Text(
-                            text = "+20 10 9876 5432 • mf.z.hussein.pal@gmail.com",
+                            text = "${uiState.userProfile.phoneNumber} • ${uiState.userProfile.email}",
                             style = MaterialTheme.typography.labelSmall,
                             color = FarasTextSecondary
                         )
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Quick Stats Row: Wallet Balance & Referral Earnings
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Wallet Balance Card
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = FarasWhite),
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { viewModel.setCustomerScreen(CustomerScreen.WALLET) }
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = FarasNeonGreenDark, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = AppStrings.get("wallet_balance", language),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = FarasTextSecondary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "${uiState.walletBalance} ${AppStrings.get("currency", language)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = FarasTextPrimary
+                        )
+                    }
+                }
+
+                // Referral Earnings Card
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = FarasNeonGreenLight),
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, FarasNeonGreen.copy(alpha = 0.5f)),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { viewModel.toggleReferralDialog(true) }
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CardGiftcard, contentDescription = null, tint = FarasNeonGreenDark, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "أرباح الدعوات 🎁",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = FarasNeonGreenDark,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "${uiState.userProfile.referralEarningsEgp} ${AppStrings.get("currency", language)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = FarasNeonGreenDark
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Action List Cards
+            Text(
+                text = "الإعدادات والخدمات الرئيسية",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = FarasTextSecondary
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 1. Payment Methods (Saved Cards + E-Wallets)
+            ProfileOptionRow(
+                icon = Icons.Default.CreditCard,
+                title = AppStrings.get("manage_payments", language),
+                subtitle = "فيزا، ماستركارد، فودافون كاش، إنستاباي للدفع أونلاين",
+                testTag = "profile_manage_payments_btn",
+                onClick = { viewModel.togglePaymentSheet(true) }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 2. Invite Friends & Discount Gifts
+            ProfileOptionRow(
+                icon = Icons.Default.CardGiftcard,
+                title = AppStrings.get("invite_friends", language),
+                subtitle = "كود خصم FARE50 وهدايا 50 ج.م عبر واتساب وجهات الاتصال",
+                testTag = "profile_invite_friends_btn",
+                onClick = { viewModel.toggleReferralDialog(true) }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 3. Support & Complaints Center
+            ProfileOptionRow(
+                icon = Icons.Default.SupportAgent,
+                title = AppStrings.get("support_and_complaints", language),
+                subtitle = "تقديم بلاغ أو شكوى، ومتابعة تذاكر الدعم الفني 24/7",
+                testTag = "profile_complaints_btn",
+                onClick = { viewModel.toggleComplaintsSheet(true) }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 4. Trips History & Receipts
+            ProfileOptionRow(
+                icon = Icons.Default.History,
+                title = AppStrings.get("trips_history", language),
+                subtitle = "عرض تفاصيل كافة الرحلات السابقة والإيصالات المعتمدة",
+                testTag = "profile_trips_history_btn",
+                onClick = { viewModel.setCustomerScreen(CustomerScreen.HISTORY) }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -227,7 +353,7 @@ fun ProfileSettingsScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Safety Standards in Egypt
+            // Safety Standards Card
             Card(
                 colors = CardDefaults.cardColors(containerColor = FarasWhite),
                 shape = RoundedCornerShape(20.dp),
@@ -255,37 +381,37 @@ fun ProfileSettingsScreen(
 
                     SafetyRuleBulletLight(
                         title = if (language == AppLanguage.ARABIC) "خوذة الركاب المعقمة إجبارية" else "Sanitized Passenger Helmet",
-                        desc = if (language == AppLanguage.ARABIC) "يلتزم كابتن السكوتر تشغيلياً بتوفير خوذة إضافية معقمة مطابقة للمواصفات ليرتديها الراكب طوال المشوار." else "Captain strictly provides a sanitized safety helmet for the passenger."
+                        desc = if (language == AppLanguage.ARABIC) "يلتزم كابتن السكوتر بتوفير خوذة إضافية معقمة مطابقة للمواصفات ليرتديها الراكب." else "Captain strictly provides a sanitized safety helmet for the passenger."
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     SafetyRuleBulletLight(
                         title = if (language == AppLanguage.ARABIC) "الحد الأقصى للطرود 15 كجم" else "15 kg Cargo Max Weight",
-                        desc = if (language == AppLanguage.ARABIC) "لضمان ثبات السكوتر في شوارع مصر، سعة الصندوق محددة بحد أقصى 15 كجم." else "Cargo box max capacity strictly capped at 15kg for balance and safety."
+                        desc = if (language == AppLanguage.ARABIC) "لضمان ثبات السكوتر وسعة الصندوق، سعة الطرود محددة بحد أقصى 15 كجم." else "Cargo box max capacity strictly capped at 15kg for balance and safety."
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     SafetyRuleBulletLight(
                         title = if (language == AppLanguage.ARABIC) "زر استغاثة الطوارئ SOS" else "SOS Emergency Dispatch",
-                        desc = if (language == AppLanguage.ARABIC) "مرتبط مباشرة بغرفة عمليات مصر وشرطة النجدة (122)." else "Directly linked to Central Operations and Egypt Police (122)."
+                        desc = if (language == AppLanguage.ARABIC) "مرتبط مباشرة بغرفة عمليات الطوارئ وشرطة النجدة (122)." else "Directly linked to Central Operations and Police (122)."
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Navigation to Trips History
+            // Switch account / Log out
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(FarasWhite)
                     .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
-                    .clickable { viewModel.setCustomerScreen(CustomerScreen.HISTORY) }
+                    .clickable { viewModel.logout() }
                     .padding(16.dp)
-                    .testTag("nav_to_history_btn")
+                    .testTag("logout_btn")
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -293,13 +419,13 @@ fun ProfileSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.History, contentDescription = null, tint = FarasNeonGreenDark)
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = FarasRedAlert)
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = AppStrings.get("trips_history", language),
+                            text = AppStrings.get("logout", language),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = FarasTextPrimary
+                            color = FarasRedAlert
                         )
                     }
                     Text(
@@ -309,6 +435,68 @@ fun ProfileSettingsScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ProfileOptionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    testTag: String,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(FarasWhite)
+            .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .padding(14.dp)
+            .testTag(testTag)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(FarasNeonGreenLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = FarasNeonGreenDark,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasTextPrimary
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = FarasTextSecondary
+                    )
+                }
+            }
+            Text(
+                text = "❯",
+                style = MaterialTheme.typography.titleMedium,
+                color = FarasTextSecondary
+            )
         }
     }
 }

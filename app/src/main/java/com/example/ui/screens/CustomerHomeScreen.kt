@@ -303,6 +303,65 @@ private fun CustomerHomeControlsSheet(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
+            // Exact Pickup Spot Card (Customer can pin location)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(FarasNeonGreenLight)
+                    .border(1.dp, FarasNeonGreen.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                    .clickable { viewModel.pinCurrentLocationGps() }
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
+                    .testTag("pin_location_btn")
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Pin Location",
+                            tint = FarasNeonGreenDark,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = AppStrings.get("pin_my_location", language),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasNeonGreenDark
+                            )
+                            Text(
+                                text = uiState.exactPickupAddress,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = FarasTextPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(FarasNeonGreen)
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "تحديث 📍",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = FarasWhite
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Uber-Style "Where to?" Search Bar
             Box(
                 modifier = Modifier
@@ -355,7 +414,7 @@ private fun CustomerHomeControlsSheet(
 
             // The Three Core Services Grid (Ride, Send Package, Buy & Get)
             Text(
-                text = if (language == AppLanguage.ARABIC) "خدمات فارسكوتر في مصر" else "Farascooter Core Services",
+                text = "${AppStrings.get("app_name", language)} - ${if (language == AppLanguage.ARABIC) "الخدمات الذكية" else "Smart Services"}",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = FarasTextSecondary
@@ -571,6 +630,8 @@ private fun ConfirmOrderSheet(
     val carEstimatedFare = (25.0 + (dest.distanceKm * 7.5) + (carDurationMin * 1.2)) * uiState.surgeMultiplier
     val moneySaved = carEstimatedFare - scooterTotal
 
+    val scrollState = rememberScrollState()
+
     Surface(
         color = FarasWhite,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
@@ -582,6 +643,7 @@ private fun ConfirmOrderSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
+                .verticalScroll(scrollState)
         ) {
             // Header
             Row(
@@ -601,7 +663,7 @@ private fun ConfirmOrderSheet(
                         color = FarasTextPrimary
                     )
                     Text(
-                        text = "${dest.distanceKm} ${AppStrings.get("km", language)} • القاهرة / الجيزة",
+                        text = "${dest.distanceKm} ${AppStrings.get("km", language)}",
                         style = MaterialTheme.typography.labelMedium,
                         color = FarasTextSecondary
                     )
@@ -612,6 +674,56 @@ private fun ConfirmOrderSheet(
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(Icons.Default.Close, contentDescription = "Close", tint = FarasTextSecondary)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Route Points (Pickup & Destination)
+            Card(
+                colors = CardDefaults.cardColors(containerColor = FarasLightGreyBg),
+                shape = RoundedCornerShape(14.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasNeonGreenDark, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column {
+                            Text(
+                                text = AppStrings.get("pickup_location", language),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = FarasTextSecondary
+                            )
+                            Text(
+                                text = uiState.exactPickupAddress,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasAmber, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column {
+                            Text(
+                                text = AppStrings.get("destination_location", language),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = FarasTextSecondary
+                            )
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) dest.nameAr else dest.nameEn,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                        }
+                    }
                 }
             }
 
