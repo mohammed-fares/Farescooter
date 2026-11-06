@@ -212,5 +212,6 @@ data class TripOrder(
     val discountAmount: Double = 0.0,
     val sosAlert: SOSAlert? = null,
     val chatMessages: List<ChatMessage> = emptyList(),
+    val actualDurationSeconds: Int = 0,
     val complaint: ComplaintTicket? = null
 )

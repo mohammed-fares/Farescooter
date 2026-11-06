@@ -42,6 +42,11 @@ enum class AppMode {
     ADMIN
 }
 
+enum class MapPinTarget {
+    PICKUP,
+    DESTINATION
+}
+
 enum class CustomerScreen {
     HOME,
     SEARCH_DESTINATION,
@@ -60,6 +65,19 @@ data class FarascooterUiState(
     val language: AppLanguage = AppLanguage.ARABIC,
     val currentMode: AppMode = AppMode.CUSTOMER,
     val customerScreen: CustomerScreen = CustomerScreen.HOME,
+
+    // Real-Time Ride Duration Counter (Ticks every second when ride begins)
+    val rideDurationSeconds: Int = 0,
+    val currentSpeedKmh: Int = 36,
+    val distanceTraveledKm: Double = 0.0,
+
+    // Interactive Map Pinning & Navigation State
+    val mapPinTarget: MapPinTarget = MapPinTarget.PICKUP,
+    val isMapPinningActive: Boolean = false,
+    val pinnedLocationName: String = "ميدان التحرير، وسط البلد",
+    val pinnedXRatio: Float = 0.49f,
+    val pinnedYRatio: Float = 0.52f,
+    val selectedNearbyScooter: ScooterLocation? = null,
 
     // Auth & Permissions State
     val isAuthCompleted: Boolean = true,
@@ -235,6 +253,7 @@ class FarascooterViewModel : ViewModel() {
     private var dispatchJob: Job? = null
     private var simulationJob: Job? = null
     private var riderMovementJob: Job? = null
+    private var durationTickerJob: Job? = null
 
     init {
         val defaultLocale = Locale.getDefault().language
@@ -331,6 +350,120 @@ class FarascooterViewModel : ViewModel() {
         )
         val spot = cairoSpots.random()
         setExactPickupLocation(spot.first, spot.second.first, spot.second.second)
+    }
+
+    // Real-Time Ride Duration Ticker (Updates every second when ride begins)
+    fun startRideDurationTicker() {
+        durationTickerJob?.cancel()
+        _uiState.update { it.copy(rideDurationSeconds = 0, currentSpeedKmh = 36, distanceTraveledKm = 0.0) }
+        durationTickerJob = viewModelScope.launch {
+            while (true) {
+                delay(1000)
+                _uiState.update { state ->
+                    if (state.activeTrip?.status == TripStatus.IN_TRANSIT) {
+                        val nextSec = state.rideDurationSeconds + 1
+                        val speed = (34 + (nextSec % 7) - 3).coerceIn(24, 44)
+                        val totalDist = state.activeTrip.distanceKm
+                        val dist = (totalDist * state.captainProgressRatio).coerceAtMost(totalDist)
+                        state.copy(
+                            rideDurationSeconds = nextSec,
+                            currentSpeedKmh = speed,
+                            distanceTraveledKm = String.format(Locale.US, "%.2f", dist).toDouble()
+                        )
+                    } else {
+                        state
+                    }
+                }
+            }
+        }
+    }
+
+    // Cairo Reverse Geocoding
+    fun reverseGeocodeCairo(xRatio: Float, yRatio: Float): Pair<String, String> {
+        val anchors = listOf(
+            Triple(0.49f, 0.52f, "ميدان التحرير، وسط البلد" to "Tahrir Square, Downtown"),
+            Triple(0.44f, 0.46f, "برج القاهرة، جزيرة الزمالك" to "Cairo Tower, Zamalek"),
+            Triple(0.41f, 0.38f, "شارع 26 يوليو، الزمالك" to "26th of July St, Zamalek"),
+            Triple(0.33f, 0.44f, "شارع جامعة الدول، المهندسين" to "Gameat El Dowal St, Mohandessin"),
+            Triple(0.30f, 0.47f, "ميدان مصطفى محمود، المهندسين" to "Mostafa Mahmoud Sq, Mohandessin"),
+            Triple(0.37f, 0.51f, "ميدان الدقي، شارع التحرير" to "Dokki Square, Tahrir St"),
+            Triple(0.38f, 0.58f, "جامعة القاهرة، ميدان النهضة" to "Cairo University, Nahda Sq"),
+            Triple(0.50f, 0.47f, "ميدان طلعت حرب، وسط البلد" to "Talaat Harb Sq, Downtown"),
+            Triple(0.47f, 0.56f, "جاردن سيتي، كورنيش النيل" to "Garden City, Nile Corniche"),
+            Triple(0.46f, 0.65f, "المنيل، شارع المنيل الرئيسي" to "Manial, Al Manial St"),
+            Triple(0.46f, 0.76f, "المعادي، شارع 9 & دجلة" to "Maadi, Degla St 9"),
+            Triple(0.74f, 0.30f, "كايرو فيستيفال سيتي، التجمع" to "CFC, New Cairo"),
+            Triple(0.70f, 0.34f, "شارع عباس العقاد، مدينة نصر" to "Abbas El Akkad St, Nasr City"),
+            Triple(0.24f, 0.68f, "طريق الأهرامات، الجيزة" to "Al Haram Road, Giza"),
+            Triple(0.36f, 0.36f, "العجوزة، كورنيش النيل" to "Agouza, Nile Corniche"),
+            Triple(0.43f, 0.49f, "كوبري قصر النيل، الجزيرة" to "Qasr El Nil Bridge, Gezira")
+        )
+
+        var bestDist = Float.MAX_VALUE
+        var bestName = anchors.first().third
+
+        anchors.forEach { (ax, ay, names) ->
+            val dx = xRatio - ax
+            val dy = yRatio - ay
+            val dist = dx * dx + dy * dy
+            if (dist < bestDist) {
+                bestDist = dist
+                bestName = names
+            }
+        }
+        return bestName
+    }
+
+    fun onMapLocationTapped(xRatio: Float, yRatio: Float) {
+        val names = reverseGeocodeCairo(xRatio, yRatio)
+        val chosenName = if (_uiState.value.language == AppLanguage.ARABIC) names.first else names.second
+        _uiState.update {
+            it.copy(
+                isMapPinningActive = true,
+                pinnedXRatio = xRatio,
+                pinnedYRatio = yRatio,
+                pinnedLocationName = chosenName
+            )
+        }
+    }
+
+    fun confirmPinnedLocation() {
+        val state = _uiState.value
+        if (state.mapPinTarget == MapPinTarget.PICKUP) {
+            setExactPickupLocation(state.pinnedLocationName, state.pinnedXRatio, state.pinnedYRatio)
+        } else {
+            val dist = kotlin.math.max(
+                1.5,
+                String.format(
+                    Locale.US,
+                    "%.1f",
+                    kotlin.math.sqrt(
+                        (state.pinnedXRatio - state.exactPickupXRatio) * (state.pinnedXRatio - state.exactPickupXRatio) +
+                        (state.pinnedYRatio - state.exactPickupYRatio) * (state.pinnedYRatio - state.exactPickupYRatio)
+                    ) * 14.0
+                ).toDouble()
+            )
+            val destPlace = PlaceItem(
+                id = "map_dest_${System.currentTimeMillis()}",
+                nameAr = state.pinnedLocationName,
+                nameEn = state.pinnedLocationName,
+                addressAr = state.pinnedLocationName,
+                addressEn = state.pinnedLocationName,
+                distanceKm = dist,
+                xRatio = state.pinnedXRatio,
+                yRatio = state.pinnedYRatio
+            )
+            selectDestination(destPlace)
+        }
+        _uiState.update { it.copy(isMapPinningActive = false) }
+    }
+
+    fun setMapPinTarget(target: MapPinTarget) {
+        _uiState.update { it.copy(mapPinTarget = target, isMapPinningActive = true) }
+    }
+
+    fun selectNearbyScooterPreview(scooter: ScooterLocation?) {
+        _uiState.update { it.copy(selectedNearbyScooter = scooter) }
     }
 
     // Dialog & Sheet Toggles
@@ -580,11 +713,13 @@ class FarascooterViewModel : ViewModel() {
     fun cancelOrder() {
         dispatchJob?.cancel()
         riderMovementJob?.cancel()
+        durationTickerJob?.cancel()
         _uiState.update {
             it.copy(
                 activeTrip = null,
                 customerScreen = CustomerScreen.HOME,
-                captainProgressRatio = 0f
+                captainProgressRatio = 0f,
+                rideDurationSeconds = 0
             )
         }
     }
@@ -609,6 +744,8 @@ class FarascooterViewModel : ViewModel() {
             }
 
             delay(3000)
+            // Ride officially begins here!
+            startRideDurationTicker()
             _uiState.update { state ->
                 state.copy(
                     activeTrip = state.activeTrip?.copy(status = TripStatus.IN_TRANSIT),
@@ -638,6 +775,7 @@ class FarascooterViewModel : ViewModel() {
                 _uiState.update { it.copy(activeTrip = trip.copy(status = TripStatus.ARRIVED_PICKUP), captainProgressRatio = 0.5f) }
             }
             TripStatus.ARRIVED_PICKUP -> {
+                startRideDurationTicker()
                 _uiState.update { it.copy(activeTrip = trip.copy(status = TripStatus.IN_TRANSIT), captainProgressRatio = 0.7f) }
             }
             TripStatus.IN_TRANSIT -> {
@@ -648,9 +786,13 @@ class FarascooterViewModel : ViewModel() {
     }
 
     private fun completeTrip() {
+        durationTickerJob?.cancel()
         riderMovementJob?.cancel()
         val current = _uiState.value.activeTrip ?: return
-        val completedTrip = current.copy(status = TripStatus.COMPLETED)
+        val completedTrip = current.copy(
+            status = TripStatus.COMPLETED,
+            actualDurationSeconds = _uiState.value.rideDurationSeconds
+        )
 
         val newBalance = if (completedTrip.paymentMethod == PaymentMethod.WALLET) {
             (_uiState.value.walletBalance - completedTrip.finalFare).coerceAtLeast(0.0)

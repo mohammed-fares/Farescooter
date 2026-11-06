@@ -142,6 +142,16 @@ object AppStrings {
         "chat_captain" to "محادثة فورية",
         "sos_button" to "استغاثة طوارئ SOS",
         "trip_in_progress" to "المشوار قيد التنفيذ الآن",
+        "live_ride_duration" to "مدة المشوار الفعلية",
+        "live_speed" to "السرعة اللحظية",
+        "km_h" to "كم/س",
+        "distance_covered" to "المسافة المقطوعة",
+        "pin_pickup_mode" to "تحديد نقطة الانطلاق 🟢",
+        "pin_dest_mode" to "تحديد الوجهة 🔴",
+        "confirm_pinned_location" to "تأكيد هذا المكان ✓",
+        "tap_to_pin_hint" to "اسحب أو انقر على الخريطة لتحديد موقعك بسهولة",
+        "select_this_scooter" to "طلب هذا السكوتر 🛵",
+        "scooter_nearby_info" to "سكوتر قريب متاح",
 
         // Complaints & Rating
         "trip_completed_title" to "وصلت بأمان!",
@@ -324,6 +334,16 @@ object AppStrings {
         "chat_captain" to "Live Chat",
         "sos_button" to "SOS Emergency",
         "trip_in_progress" to "Trip in progress",
+        "live_ride_duration" to "Live Ride Duration",
+        "live_speed" to "Live Speed",
+        "km_h" to "km/h",
+        "distance_covered" to "Distance Traveled",
+        "pin_pickup_mode" to "Set Pickup 🟢",
+        "pin_dest_mode" to "Set Destination 🔴",
+        "confirm_pinned_location" to "Confirm Location ✓",
+        "tap_to_pin_hint" to "Drag or tap on the map to set your spot smoothly",
+        "select_this_scooter" to "Request This Scooter 🛵",
+        "scooter_nearby_info" to "Nearby Scooter Available",
 
         // Complaints & Rating
         "trip_completed_title" to "Arrived safely!",

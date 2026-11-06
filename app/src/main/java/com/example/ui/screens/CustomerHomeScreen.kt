@@ -118,17 +118,26 @@ fun CustomerHomeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 1. Interactive Map Background
+        // 1. Interactive Cairo Map with Live Touch Pinning and Real-time Geocoding
         InteractiveDarkMap(
             nearbyScooters = uiState.nearbyScooters,
             currentTrip = uiState.activeTrip,
             captainProgressRatio = uiState.captainProgressRatio,
-            modifier = Modifier.fillMaxSize(),
-            onMapTapped = { x, y ->
-                if (uiState.customerScreen in listOf(CustomerScreen.HOME, CustomerScreen.SEARCH_DESTINATION)) {
-                    viewModel.setMapCustomDestination(x, y)
-                }
-            }
+            language = language,
+            exactPickupAddress = uiState.exactPickupAddress,
+            exactPickupXRatio = uiState.exactPickupXRatio,
+            exactPickupYRatio = uiState.exactPickupYRatio,
+            isMapPinningActive = uiState.isMapPinningActive,
+            mapPinTarget = uiState.mapPinTarget,
+            pinnedLocationName = uiState.pinnedLocationName,
+            pinnedXRatio = uiState.pinnedXRatio,
+            pinnedYRatio = uiState.pinnedYRatio,
+            selectedScooterPreview = uiState.selectedNearbyScooter,
+            onMapLocationTapped = { x, y -> viewModel.onMapLocationTapped(x, y) },
+            onConfirmPinnedLocation = { viewModel.confirmPinnedLocation() },
+            onSetMapPinTarget = { target -> viewModel.setMapPinTarget(target) },
+            onSelectNearbyScooter = { sc -> viewModel.selectNearbyScooterPreview(sc) },
+            modifier = Modifier.fillMaxSize()
         )
 
         // Floating SOS notification banner if triggered
@@ -1128,7 +1137,101 @@ private fun LiveTrackingSheet(
                     .clip(CircleShape)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Real-Time Ride Duration Counter (Starts when user begins ride & updates every second)
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = if (trip?.status == TripStatus.IN_TRANSIT) FarasNeonGreenLight else FarasLightGreyBg
+                ),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.5.dp,
+                    if (trip?.status == TripStatus.IN_TRANSIT) FarasNeonGreen else FarasCardBorder
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("realtime_duration_card")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape)
+                                .background(if (trip?.status == TripStatus.IN_TRANSIT) FarasNeonGreen else FarasCardBorder),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Timer,
+                                contentDescription = null,
+                                tint = if (trip?.status == TripStatus.IN_TRANSIT) FarasWhite else FarasTextSecondary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (trip?.status == TripStatus.IN_TRANSIT) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(FarasNeonGreenDark)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+                                Text(
+                                    text = if (trip?.status == TripStatus.IN_TRANSIT)
+                                        AppStrings.get("live_ride_duration", language)
+                                    else
+                                        AppStrings.get("rider_arriving_in", language),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (trip?.status == TripStatus.IN_TRANSIT) FarasNeonGreenDark else FarasTextSecondary
+                                )
+                            }
+                            Text(
+                                text = if (trip?.status == TripStatus.IN_TRANSIT)
+                                    "${AppStrings.get("live_speed", language)}: ${uiState.currentSpeedKmh} ${AppStrings.get("km_h", language)}"
+                                else
+                                    if (language == AppLanguage.ARABIC) "الكابتن في طريقه إليك" else "Captain on the way",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = FarasTextSecondary
+                            )
+                        }
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = if (trip?.status == TripStatus.IN_TRANSIT)
+                                String.format(java.util.Locale.US, "%02d:%02d", uiState.rideDurationSeconds / 60, uiState.rideDurationSeconds % 60)
+                            else
+                                "${trip?.durationMin ?: 5} ${AppStrings.get("minutes", language)}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (trip?.status == TripStatus.IN_TRANSIT) FarasNeonGreenDark else FarasTextPrimary,
+                            modifier = Modifier.testTag("realtime_duration_text")
+                        )
+                        Text(
+                            text = if (trip?.status == TripStatus.IN_TRANSIT)
+                                "${AppStrings.get("distance_covered", language)}: ${uiState.distanceTraveledKm} ${AppStrings.get("km", language)}"
+                            else
+                                if (language == AppLanguage.ARABIC) "وقت متوقع" else "Estimated",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = FarasTextSecondary
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Captain Info Card
             Box(
