@@ -154,7 +154,8 @@ data class PackageDetails(
 )
 
 data class ErrandDetails(
-    val storeName: String = "",
+    val storeName: String = "صيدلية العزبي - فرع التحرير",
+    val deliveryLocation: String = "مقر العمل - التحرير، وسط البلد",
     val itemsList: String = "",
     val estimatedBudget: Double = 80.0
 )

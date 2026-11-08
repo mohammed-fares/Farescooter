@@ -71,9 +71,12 @@ import com.example.model.ServiceType
 import com.example.model.TripOrder
 import com.example.model.TripStatus
 import com.example.ui.components.ErrandFormSheet
+import com.example.ui.components.GoogleMapsView
 import com.example.ui.components.InteractiveDarkMap
 import com.example.ui.components.PackageFormSheet
 import com.example.ui.components.TripRatingSheet
+import com.example.viewmodel.MapDisplayMode
+import com.example.viewmodel.MapPinTarget
 import com.example.ui.theme.FarasAmber
 import com.example.ui.theme.FarasAmberBg
 import com.example.ui.theme.FarasBlue
@@ -118,27 +121,88 @@ fun CustomerHomeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 1. Interactive Cairo Map with Live Touch Pinning and Real-time Geocoding
-        InteractiveDarkMap(
-            nearbyScooters = uiState.nearbyScooters,
-            currentTrip = uiState.activeTrip,
-            captainProgressRatio = uiState.captainProgressRatio,
-            language = language,
-            exactPickupAddress = uiState.exactPickupAddress,
-            exactPickupXRatio = uiState.exactPickupXRatio,
-            exactPickupYRatio = uiState.exactPickupYRatio,
-            isMapPinningActive = uiState.isMapPinningActive,
-            mapPinTarget = uiState.mapPinTarget,
-            pinnedLocationName = uiState.pinnedLocationName,
-            pinnedXRatio = uiState.pinnedXRatio,
-            pinnedYRatio = uiState.pinnedYRatio,
-            selectedScooterPreview = uiState.selectedNearbyScooter,
-            onMapLocationTapped = { x, y -> viewModel.onMapLocationTapped(x, y) },
-            onConfirmPinnedLocation = { viewModel.confirmPinnedLocation() },
-            onSetMapPinTarget = { target -> viewModel.setMapPinTarget(target) },
-            onSelectNearbyScooter = { sc -> viewModel.selectNearbyScooterPreview(sc) },
-            modifier = Modifier.fillMaxSize()
-        )
+        // Map: Real Google Maps (Default) or Dark Radar Map
+        if (uiState.mapDisplayMode == MapDisplayMode.GOOGLE_MAPS) {
+            GoogleMapsView(
+                language = language,
+                pickupAddress = uiState.exactPickupAddress,
+                pickupLat = uiState.pickupLatitude,
+                pickupLng = uiState.pickupLongitude,
+                destAddress = uiState.selectedDestination?.let { if (language == AppLanguage.ARABIC) it.nameAr else it.nameEn },
+                destLat = if (uiState.selectedDestination != null) uiState.destLatitude else null,
+                destLng = if (uiState.selectedDestination != null) uiState.destLongitude else null,
+                nearbyScooters = uiState.nearbyScooters,
+                currentTrip = uiState.activeTrip,
+                captainProgressRatio = uiState.captainProgressRatio,
+                isMapPinningActive = uiState.isMapPinningActive,
+                mapPinTarget = uiState.mapPinTarget,
+                pinnedLocationName = uiState.pinnedLocationName,
+                pinnedLat = uiState.pinnedLatitude,
+                pinnedLng = uiState.pinnedLongitude,
+                mapLayerType = uiState.mapLayerType,
+                isDetectingGps = uiState.isDetectingGpsLocation,
+                onMapLocationTapped = { lat, lng -> viewModel.onMapLocationTapped(lat, lng) },
+                onConfirmPinnedLocation = { viewModel.confirmPinnedLocation() },
+                onSetMapPinTarget = { target -> viewModel.setMapPinTarget(target) },
+                onSelectNearbyScooter = { sc -> viewModel.selectNearbyScooterPreview(sc) },
+                onSetMapLayerType = { layer -> viewModel.setMapLayerType(layer) },
+                onToggleMapDisplayMode = { viewModel.setMapDisplayMode(MapDisplayMode.RADAR_MAP) },
+                onRequestGpsLocation = { viewModel.pinCurrentLocationGps() },
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            InteractiveDarkMap(
+                nearbyScooters = uiState.nearbyScooters,
+                currentTrip = uiState.activeTrip,
+                captainProgressRatio = uiState.captainProgressRatio,
+                language = language,
+                exactPickupAddress = uiState.exactPickupAddress,
+                exactPickupXRatio = uiState.exactPickupXRatio,
+                exactPickupYRatio = uiState.exactPickupYRatio,
+                isMapPinningActive = uiState.isMapPinningActive,
+                mapPinTarget = uiState.mapPinTarget,
+                pinnedLocationName = uiState.pinnedLocationName,
+                pinnedXRatio = uiState.pinnedXRatio,
+                pinnedYRatio = uiState.pinnedYRatio,
+                selectedScooterPreview = uiState.selectedNearbyScooter,
+                onMapLocationTapped = { x, y -> viewModel.onMapLocationTapped(x, y) },
+                onConfirmPinnedLocation = { viewModel.confirmPinnedLocation() },
+                onSetMapPinTarget = { target -> viewModel.setMapPinTarget(target) },
+                onSelectNearbyScooter = { sc -> viewModel.selectNearbyScooterPreview(sc) },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // Floating Toast when GPS location is acquired
+        AnimatedVisibility(
+            visible = uiState.gpsFeedbackToast != null,
+            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically(),
+            exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.slideOutVertically(),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 65.dp, start = 20.dp, end = 20.dp)
+        ) {
+            Surface(
+                color = FarasNeonGreenDark,
+                shape = RoundedCornerShape(14.dp),
+                shadowElevation = 8.dp,
+                modifier = Modifier.clickable { viewModel.clearGpsFeedbackToast() }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasWhite, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = uiState.gpsFeedbackToast ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasWhite
+                    )
+                }
+            }
+        }
 
         // Floating SOS notification banner if triggered
         AnimatedVisibility(
@@ -198,6 +262,14 @@ fun CustomerHomeScreen(
                         onConfirm = { draft ->
                             viewModel.updatePackageDraft(draft)
                             viewModel.confirmPackageForm()
+                        },
+                        onSelectLocationOnMap = { target ->
+                            viewModel.setMapPinTarget(target)
+                        },
+                        onUseCurrentGpsLocation = { callback ->
+                            viewModel.pinCurrentLocationGps { addr, _, _ ->
+                                callback(addr)
+                            }
                         }
                     )
                 }
@@ -210,6 +282,14 @@ fun CustomerHomeScreen(
                         onConfirm = { draft ->
                             viewModel.updateErrandDraft(draft)
                             viewModel.confirmErrandForm()
+                        },
+                        onSelectLocationOnMap = { target ->
+                            viewModel.setMapPinTarget(target)
+                        },
+                        onUseCurrentGpsLocation = { callback ->
+                            viewModel.pinCurrentLocationGps { addr, _, _ ->
+                                callback(addr)
+                            }
                         }
                     )
                 }
@@ -359,12 +439,20 @@ private fun CustomerHomeControlsSheet(
                             .background(FarasNeonGreen)
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Text(
-                            text = "تحديث 📍",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = FarasWhite
-                        )
+                        if (uiState.isDetectingGpsLocation) {
+                            CircularProgressIndicator(
+                                color = FarasWhite,
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "تحديث 📍",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasWhite
+                            )
+                        }
                     }
                 }
             }

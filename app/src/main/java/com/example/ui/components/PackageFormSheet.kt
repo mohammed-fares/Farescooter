@@ -2,6 +2,8 @@ package com.example.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +21,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
@@ -31,6 +35,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +58,7 @@ import com.example.ui.theme.FarasNeonGreenDark
 import com.example.ui.theme.FarasTextPrimary
 import com.example.ui.theme.FarasTextSecondary
 import com.example.ui.theme.FarasWhite
+import com.example.viewmodel.MapPinTarget
 
 @Composable
 fun PackageFormSheet(
@@ -60,6 +66,8 @@ fun PackageFormSheet(
     initialDraft: PackageDetails,
     onBack: () -> Unit,
     onConfirm: (PackageDetails) -> Unit,
+    onSelectLocationOnMap: (MapPinTarget) -> Unit = {},
+    onUseCurrentGpsLocation: (((String) -> Unit)) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -70,6 +78,12 @@ fun PackageFormSheet(
     var receiverName by remember { mutableStateOf(initialDraft.receiverName) }
     var receiverPhone by remember { mutableStateOf(initialDraft.receiverPhone) }
     var weightKg by remember { mutableStateOf(initialDraft.weightKg.toString()) }
+
+    // Sync if draft updated externally (e.g. from Map Pin selection or GPS)
+    LaunchedEffect(initialDraft.pickupLocation, initialDraft.deliveryLocation) {
+        pickupLocation = initialDraft.pickupLocation
+        deliveryLocation = initialDraft.deliveryLocation
+    }
 
     Surface(
         color = FarasWhite,
@@ -145,39 +159,131 @@ fun PackageFormSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 1. Pickup Location (مكان استلام الطرد)
-            OutlinedTextField(
-                value = pickupLocation,
-                onValueChange = { pickupLocation = it },
-                label = { Text(AppStrings.get("package_pickup_loc", language)) },
-                leadingIcon = {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasNeonGreenDark)
-                },
-                colors = textFieldColorsLight(),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("package_pickup_input")
-            )
+            // 1. Pickup Location (مكان استلام الطرد - كتابة أو تحديد عبر اللوكيشن / الخريطة)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = pickupLocation,
+                    onValueChange = { pickupLocation = it },
+                    label = { Text(AppStrings.get("package_pickup_loc", language)) },
+                    placeholder = { Text(if (language == AppLanguage.ARABIC) "اكتب العنوان بالتفصيل أو حدده من الخريطة" else "Type address or pick on map") },
+                    leadingIcon = {
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasNeonGreenDark)
+                    },
+                    colors = textFieldColorsLight(),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("package_pickup_input")
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-            // 2. Dropoff Delivery Location (مكان تسليم الطرد)
-            OutlinedTextField(
-                value = deliveryLocation,
-                onValueChange = { deliveryLocation = it },
-                label = { Text(AppStrings.get("package_dropoff_loc", language)) },
-                leadingIcon = {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasAmber)
-                },
-                colors = textFieldColorsLight(),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("package_dropoff_input")
-            )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Pick on Map Button
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(FarasNeonGreen.copy(alpha = 0.12f))
+                            .clickable { onSelectLocationOnMap(MapPinTarget.PACKAGE_PICKUP) }
+                            .padding(vertical = 8.dp, horizontal = 10.dp)
+                            .testTag("package_pickup_map_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Map, contentDescription = null, tint = FarasNeonGreenDark, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = AppStrings.get("pick_from_map", language),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasNeonGreenDark
+                            )
+                        }
+                    }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                    // Use Real GPS Location Button
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(FarasLightGreyBg)
+                            .border(1.dp, FarasCardBorder, RoundedCornerShape(8.dp))
+                            .clickable {
+                                onUseCurrentGpsLocation { addr -> pickupLocation = addr }
+                            }
+                            .padding(vertical = 8.dp, horizontal = 10.dp)
+                            .testTag("package_pickup_gps_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.MyLocation, contentDescription = null, tint = FarasTextPrimary, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = AppStrings.get("use_my_location", language),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // 2. Dropoff Delivery Location (مكان تسليم الطرد - كتابة أو تحديد عبر اللوكيشن / الخريطة)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = deliveryLocation,
+                    onValueChange = { deliveryLocation = it },
+                    label = { Text(AppStrings.get("package_dropoff_loc", language)) },
+                    placeholder = { Text(if (language == AppLanguage.ARABIC) "اكتب عنوان المستلم أو حدده من الخريطة" else "Type destination or pick on map") },
+                    leadingIcon = {
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasAmber)
+                    },
+                    colors = textFieldColorsLight(),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("package_dropoff_input")
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Pick on Map Button
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(FarasAmber.copy(alpha = 0.12f))
+                            .clickable { onSelectLocationOnMap(MapPinTarget.PACKAGE_DROPOFF) }
+                            .padding(vertical = 8.dp, horizontal = 10.dp)
+                            .testTag("package_dropoff_map_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Map, contentDescription = null, tint = FarasAmber, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = AppStrings.get("pick_from_map", language),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasAmber
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // 3. Description Field
             OutlinedTextField(
