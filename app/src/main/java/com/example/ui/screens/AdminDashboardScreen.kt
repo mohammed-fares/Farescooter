@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,14 +25,24 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.FontDownload
+import androidx.compose.material.icons.filled.FormatColorFill
 import androidx.compose.material.icons.filled.Handyman
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TwoWheeler
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Warning
@@ -39,8 +50,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
@@ -63,8 +77,10 @@ import androidx.compose.ui.unit.dp
 import com.example.data.AppLanguage
 import com.example.data.AppStrings
 import com.example.model.AiMarketingCampaign
+import com.example.model.AppFontFamily
 import com.example.model.Captain
 import com.example.model.CaptainNeedRequest
+import com.example.model.CaptainStatus
 import com.example.model.DeviceDownloadRecord
 import com.example.ui.theme.FarasAmber
 import com.example.ui.theme.FarasAmberBg
@@ -159,36 +175,39 @@ fun AdminDashboardScreen(
                     .clip(RoundedCornerShape(14.dp))
                     .background(FarasWhite)
                     .border(1.dp, FarasCardBorder, RoundedCornerShape(14.dp))
+                    .horizontalScroll(rememberScrollState())
                     .padding(4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 AdminTabButton(
                     title = if (language == AppLanguage.ARABIC) "الأجهزة والتنزيلات" else "Devices",
                     icon = Icons.Default.Devices,
                     isSelected = selectedAdminTab == 0,
-                    modifier = Modifier.weight(1f),
                     onClick = { selectedAdminTab = 0 }
                 )
                 AdminTabButton(
-                    title = if (language == AppLanguage.ARABIC) "الكباتن والطلبات" else "Captains",
+                    title = if (language == AppLanguage.ARABIC) "إدارة الكباتن" else "Captains",
                     icon = Icons.Default.TwoWheeler,
                     isSelected = selectedAdminTab == 1,
-                    modifier = Modifier.weight(1f),
                     onClick = { selectedAdminTab = 1 }
                 )
                 AdminTabButton(
-                    title = if (language == AppLanguage.ARABIC) "تسويق الـ AI ✨" else "AI Ads",
+                    title = if (language == AppLanguage.ARABIC) "تسويق AI ✨" else "AI Ads",
                     icon = Icons.Default.AutoAwesome,
                     isSelected = selectedAdminTab == 2,
-                    modifier = Modifier.weight(1f),
                     onClick = { selectedAdminTab = 2 }
                 )
                 AdminTabButton(
                     title = if (language == AppLanguage.ARABIC) "البث والتسعير" else "Ops",
                     icon = Icons.Default.Campaign,
                     isSelected = selectedAdminTab == 3,
-                    modifier = Modifier.weight(1f),
                     onClick = { selectedAdminTab = 3 }
+                )
+                AdminTabButton(
+                    title = if (language == AppLanguage.ARABIC) "المظهر والخطوط 🎨" else "Theme & Fonts",
+                    icon = Icons.Default.Palette,
+                    isSelected = selectedAdminTab == 4,
+                    onClick = { selectedAdminTab = 4 }
                 )
             }
 
@@ -289,12 +308,17 @@ fun AdminDashboardScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Captains Verification & Document Audit
+                // Captains Governance & Oversight (إدارة الكباتن والموافقة/الحظر/التوقيف)
                 Text(
-                    text = if (language == AppLanguage.ARABIC) "توثيق الكباتن والفحص الجنائي" else "Captains Verification & Records",
+                    text = if (language == AppLanguage.ARABIC) "إدارة ومراقبة أداء الكباتن" else "Captains Governance & Performance",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = FarasTextPrimary
+                )
+                Text(
+                    text = if (language == AppLanguage.ARABIC) "الموافقة على الكباتن الجدد، الحظر، التوقيف المؤقت، ومراقبة التقييمات" else "Approve, suspend, block captains and monitor performance",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = FarasTextSecondary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -303,7 +327,22 @@ fun AdminDashboardScreen(
                         CaptainAuditCardLight(
                             captain = captain,
                             language = language,
-                            onToggleVerify = { viewModel.toggleCaptainVerification(captain.id) }
+                            onApprove = {
+                                viewModel.approveCaptain(captain.id)
+                                Toast.makeText(context, "تم اعتماد وتفعيل الكابتن ${captain.name} بنجاح ✅", Toast.LENGTH_SHORT).show()
+                            },
+                            onSuspend = {
+                                viewModel.suspendCaptain(captain.id)
+                                Toast.makeText(context, "تم توقيف الكابتن ${captain.name} مؤقتاً ⏸️", Toast.LENGTH_SHORT).show()
+                            },
+                            onBlock = {
+                                viewModel.blockCaptain(captain.id)
+                                Toast.makeText(context, "تم حظر الكابتن ${captain.name} نهائياً 🚫", Toast.LENGTH_SHORT).show()
+                            },
+                            onReactivate = {
+                                viewModel.reactivateCaptain(captain.id)
+                                Toast.makeText(context, "تم إعادة تفعيل الكابتن ${captain.name} بنجاح ⚡", Toast.LENGTH_SHORT).show()
+                            }
                         )
                     }
                 }
@@ -528,6 +567,15 @@ fun AdminDashboardScreen(
                     }
                 }
             }
+
+            // Tab 4: Live Theme & Fonts Customization (المظهر والخطوط)
+            else if (selectedAdminTab == 4) {
+                ThemeCustomizationSection(
+                    uiState = uiState,
+                    viewModel = viewModel,
+                    language = language
+                )
+            }
         }
     }
 }
@@ -545,7 +593,7 @@ private fun AdminTabButton(
             .clip(RoundedCornerShape(10.dp))
             .background(if (isSelected) FarasNeonGreen else Color.Transparent)
             .clickable { onClick() }
-            .padding(vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -555,7 +603,7 @@ private fun AdminTabButton(
                 tint = if (isSelected) FarasWhite else FarasTextSecondary,
                 modifier = Modifier.size(16.dp)
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall,
@@ -765,48 +813,721 @@ private fun AiCampaignCard(
 private fun CaptainAuditCardLight(
     captain: Captain,
     language: AppLanguage,
-    onToggleVerify: () -> Unit
+    onApprove: () -> Unit,
+    onSuspend: () -> Unit,
+    onBlock: () -> Unit,
+    onReactivate: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(FarasWhite)
-            .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
-            .padding(14.dp)
+    val statusColor = when (captain.status) {
+        CaptainStatus.APPROVED -> FarasNeonGreenDark
+        CaptainStatus.PENDING -> FarasAmber
+        CaptainStatus.SUSPENDED -> Color(0xFFF97316)
+        CaptainStatus.BLOCKED -> FarasRedAlert
+    }
+
+    val statusBg = when (captain.status) {
+        CaptainStatus.APPROVED -> FarasNeonGreenLight
+        CaptainStatus.PENDING -> FarasAmberBg
+        CaptainStatus.SUSPENDED -> Color(0xFFFFF7ED)
+        CaptainStatus.BLOCKED -> FarasRedAlertBg
+    }
+
+    val statusText = when (captain.status) {
+        CaptainStatus.APPROVED -> if (language == AppLanguage.ARABIC) "معتمد وفعال 🟢" else "Approved 🟢"
+        CaptainStatus.PENDING -> if (language == AppLanguage.ARABIC) "في انتظار الموافقة 🟡" else "Pending 🟡"
+        CaptainStatus.SUSPENDED -> if (language == AppLanguage.ARABIC) "موقوف مؤقتاً ⏸️" else "Suspended ⏸️"
+        CaptainStatus.BLOCKED -> if (language == AppLanguage.ARABIC) "محظور نهائياً 🚫" else "Blocked 🚫"
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = FarasWhite),
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            // Header Row: Name + Verification badge + Status Badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = captain.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = FarasTextPrimary)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    if (captain.isVerified) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = FarasNeonGreen, modifier = Modifier.size(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(FarasSurfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.TwoWheeler,
+                            contentDescription = null,
+                            tint = FarasTextPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = captain.name,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                            if (captain.isVerified) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Verified",
+                                    tint = FarasNeonGreen,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Text(
+                            text = "هاتف: ${captain.phone}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = FarasTextSecondary
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(text = "الرقم القومي: ${captain.nationalId} • لوحة: ${captain.plateNumber}", style = MaterialTheme.typography.labelSmall, color = FarasTextSecondary)
-                Text(text = "${captain.licenseStatus} • الفيش الجنائي معتمد ومفحوص", style = MaterialTheme.typography.labelSmall, color = FarasNeonGreenDark)
+
+                // Status Badge
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(statusBg)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = statusColor
+                    )
+                }
             }
 
-            Button(
-                onClick = onToggleVerify,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (captain.isVerified) FarasSurfaceVariant else FarasNeonGreen
-                ),
-                shape = RoundedCornerShape(10.dp)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Details and Performance Metrics
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(FarasLightGreyBg)
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = if (captain.isVerified) AppStrings.get("admin_suspend", language) else AppStrings.get("admin_approve", language),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = if (captain.isVerified) FarasRedAlert else FarasWhite
-                )
+                Column {
+                    Text(
+                        text = "الدراجة: ${captain.scooterModel}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = FarasTextPrimary
+                    )
+                    Text(
+                        text = "لوحة: ${captain.plateNumber} • قومي: ${captain.nationalId}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = FarasTextSecondary
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Star, contentDescription = null, tint = FarasAmber, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "${captain.rating}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasTextPrimary
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "(${captain.totalRides} مشوار)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = FarasTextSecondary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Action Buttons based on status (الموافقة على الكابتن أو حظره أو توقيفه مؤقتاً أو إعادة تفعيله)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                when (captain.status) {
+                    CaptainStatus.PENDING -> {
+                        Button(
+                            onClick = onApprove,
+                            colors = ButtonDefaults.buttonColors(containerColor = FarasNeonGreen),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null, tint = FarasWhite, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "اعتماد الكابتن ✓" else "Approve ✓",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasWhite
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = onBlock,
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FarasRedAlert),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Block, contentDescription = null, tint = FarasRedAlert, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "رفض وحظر 🚫" else "Block 🚫",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    CaptainStatus.APPROVED -> {
+                        Button(
+                            onClick = onSuspend,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF97316)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Pause, contentDescription = null, tint = FarasWhite, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "توقيف مؤقت ⏸️" else "Suspend ⏸️",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasWhite
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = onBlock,
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FarasRedAlert),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Block, contentDescription = null, tint = FarasRedAlert, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "حظر الكابتن 🚫" else "Block 🚫",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    CaptainStatus.SUSPENDED -> {
+                        Button(
+                            onClick = onApprove,
+                            colors = ButtonDefaults.buttonColors(containerColor = FarasNeonGreen),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null, tint = FarasWhite, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "إلغاء التوقيف وتفعيل ✓" else "Unsuspend ✓",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasWhite
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = onBlock,
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FarasRedAlert),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Block, contentDescription = null, tint = FarasRedAlert, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "حظر نهائي 🚫" else "Block 🚫",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    CaptainStatus.BLOCKED -> {
+                        Button(
+                            onClick = onReactivate,
+                            colors = ButtonDefaults.buttonColors(containerColor = FarasNeonGreen),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.RestartAlt, contentDescription = null, tint = FarasWhite, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "فك الحظر وتفعيل الكابتن ⚡" else "Unblock & Reactivate ⚡",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasWhite
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
+
+@Composable
+private fun ThemeCustomizationSection(
+    uiState: FarascooterUiState,
+    viewModel: FarascooterViewModel,
+    language: AppLanguage
+) {
+    val context = LocalContext.current
+    var customHexInput by remember { mutableStateOf("") }
+
+    val primaryColorPresets = listOf(
+        Pair(0xFF00B44A, if (language == AppLanguage.ARABIC) "أخضر FareScooter" else "FareScooter Green"),
+        Pair(0xFF1E3A8A, if (language == AppLanguage.ARABIC) "أزرق ملكي" else "Royal Navy"),
+        Pair(0xFF7C3AED, if (language == AppLanguage.ARABIC) "بنفسجي كهربائي" else "Electric Purple"),
+        Pair(0xFFF97316, if (language == AppLanguage.ARABIC) "برتقالي حيوي" else "Vibrant Orange"),
+        Pair(0xFF111827, if (language == AppLanguage.ARABIC) "أسود أنيق" else "Obsidian Black"),
+        Pair(0xFF059669, if (language == AppLanguage.ARABIC) "زمردي كلاسيكي" else "Classic Emerald"),
+        Pair(0xFFDC2626, if (language == AppLanguage.ARABIC) "أحمر قرمزي" else "Crimson Red")
+    )
+
+    val backgroundColorPresets = listOf(
+        Pair(0xFFE7E8EA, if (language == AppLanguage.ARABIC) "رمادي فاتح (الافتراضي)" else "Light Grey (Default)"),
+        Pair(0xFFFFFFFF, if (language == AppLanguage.ARABIC) "أبيض ناصع" else "Pure White"),
+        Pair(0xFFF3F4F6, if (language == AppLanguage.ARABIC) "رمادي ثلجي ناعم" else "Soft Snow Grey"),
+        Pair(0xFF0F172A, if (language == AppLanguage.ARABIC) "داكن حديث" else "Dark Slate Mode")
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Section Header
+        Card(
+            colors = CardDefaults.cardColors(containerColor = FarasWhite),
+            shape = RoundedCornerShape(18.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(Color(uiState.customPrimaryColorHex)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Palette, contentDescription = null, tint = FarasWhite, modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = if (language == AppLanguage.ARABIC) "تخصيص ألوان التطبيق والخطوط" else "Theme & Typography Customization",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = FarasTextPrimary
+                        )
+                        Text(
+                            text = if (language == AppLanguage.ARABIC) "تغيير فوري ومباشر لألوان الهوية وخطوط الواجهة (عربي وإنجليزي)" else "Live dynamic changes to app identity colors & fonts",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = FarasTextSecondary
+                        )
+                    }
+                }
+            }
+        }
+
+        // 1. Primary App Color
+        Card(
+            colors = CardDefaults.cardColors(containerColor = FarasWhite),
+            shape = RoundedCornerShape(18.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.FormatColorFill, contentDescription = null, tint = Color(uiState.customPrimaryColorHex), modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (language == AppLanguage.ARABIC) "اللون الأساسي للتطبيق (Primary Color)" else "Primary App Color",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasTextPrimary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Presets swatches
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    primaryColorPresets.forEach { (hexVal, name) ->
+                        val isSelected = uiState.customPrimaryColorHex == hexVal
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) Color(hexVal).copy(alpha = 0.15f) else FarasLightGreyBg)
+                                .border(
+                                    width = if (isSelected) 2.dp else 1.dp,
+                                    color = if (isSelected) Color(hexVal) else FarasCardBorder,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clickable {
+                                    viewModel.setPrimaryColor(hexVal)
+                                    Toast.makeText(context, "تم تطبيق اللون: $name", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(hexVal))
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) Color(hexVal) else FarasTextPrimary
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Custom Hex input
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = customHexInput,
+                        onValueChange = { customHexInput = it },
+                        placeholder = { Text("كود لون مخصص (مثال: #00B44A)") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = FarasLightGreyBg,
+                            unfocusedContainerColor = FarasLightGreyBg,
+                            focusedBorderColor = Color(uiState.customPrimaryColorHex),
+                            unfocusedBorderColor = FarasCardBorder
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val clean = customHexInput.trim().removePrefix("#")
+                            val parsed = clean.toLongOrNull(16)
+                            if (parsed != null) {
+                                val fullHex = if (clean.length == 6) 0xFF000000L or parsed else parsed
+                                viewModel.setPrimaryColor(fullHex)
+                                Toast.makeText(context, "تم تطبيق اللون المخصص بنجاح 🎨", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "يرجى إدخال كود لون سداسي عشري صحيح", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(uiState.customPrimaryColorHex)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(if (language == AppLanguage.ARABIC) "تطبيق" else "Apply", color = FarasWhite, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        // 2. Background Color
+        Card(
+            colors = CardDefaults.cardColors(containerColor = FarasWhite),
+            shape = RoundedCornerShape(18.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.ColorLens, contentDescription = null, tint = Color(uiState.customPrimaryColorHex), modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (language == AppLanguage.ARABIC) "لون خلفية التطبيق (Background Color)" else "App Background Color",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasTextPrimary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    backgroundColorPresets.forEach { (hexVal, name) ->
+                        val isSelected = uiState.customBackgroundColorHex == hexVal
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) FarasNeonGreenLight else FarasLightGreyBg)
+                                .border(
+                                    width = if (isSelected) 1.5.dp else 1.dp,
+                                    color = if (isSelected) Color(uiState.customPrimaryColorHex) else FarasCardBorder,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .clickable {
+                                    viewModel.setBackgroundColor(hexVal)
+                                    Toast.makeText(context, "تم تغيير لون الخلفية: $name", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(hexVal))
+                                        .border(1.dp, FarasTextMuted.copy(alpha = 0.4f), CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = FarasTextPrimary
+                                )
+                            }
+                            if (isSelected) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(uiState.customPrimaryColorHex), modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Arabic Font Selector
+        Card(
+            colors = CardDefaults.cardColors(containerColor = FarasWhite),
+            shape = RoundedCornerShape(18.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.FontDownload, contentDescription = null, tint = Color(uiState.customPrimaryColorHex), modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (language == AppLanguage.ARABIC) "خط اللغة العربية المعتمد" else "Arabic Font Family",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasTextPrimary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                val arabicFonts = listOf(
+                    Pair(AppFontFamily.CAIRO, "كايرو (Cairo) - الخط الرسمي الافتراضي"),
+                    Pair(AppFontFamily.TAJAWAL, "تجوال (Tajawal) - انسيابي وعصري"),
+                    Pair(AppFontFamily.ALMARAI, "المراعي (Almarai) - دقيق وواضح"),
+                    Pair(AppFontFamily.SYSTEM_DEFAULT, "خط النظام الافتراضي (System Default)")
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    arabicFonts.forEach { (font, label) ->
+                        val isSelected = uiState.selectedArabicFont == font
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) FarasNeonGreenLight else FarasLightGreyBg)
+                                .border(
+                                    width = if (isSelected) 1.5.dp else 1.dp,
+                                    color = if (isSelected) Color(uiState.customPrimaryColorHex) else FarasCardBorder,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .clickable {
+                                    viewModel.setArabicFont(font)
+                                    Toast.makeText(context, "تم تفعيل خط العربية: $label", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = FarasTextPrimary
+                            )
+                            if (isSelected) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(uiState.customPrimaryColorHex), modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. English Font Selector
+        Card(
+            colors = CardDefaults.cardColors(containerColor = FarasWhite),
+            shape = RoundedCornerShape(18.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.FontDownload, contentDescription = null, tint = Color(uiState.customPrimaryColorHex), modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (language == AppLanguage.ARABIC) "خط اللغة الإنجليزية المعتمد" else "English Font Family",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasTextPrimary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                val englishFonts = listOf(
+                    Pair(AppFontFamily.CAIRO, "Cairo (Default Global)"),
+                    Pair(AppFontFamily.INTER, "Inter (Modern Minimalist)"),
+                    Pair(AppFontFamily.ROBOTO, "Roboto (Android Standard)"),
+                    Pair(AppFontFamily.SYSTEM_DEFAULT, "System Default")
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    englishFonts.forEach { (font, label) ->
+                        val isSelected = uiState.selectedEnglishFont == font
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) FarasNeonGreenLight else FarasLightGreyBg)
+                                .border(
+                                    width = if (isSelected) 1.5.dp else 1.dp,
+                                    color = if (isSelected) Color(uiState.customPrimaryColorHex) else FarasCardBorder,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .clickable {
+                                    viewModel.setEnglishFont(font)
+                                    Toast.makeText(context, "English font activated: $label", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = FarasTextPrimary
+                            )
+                            if (isSelected) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(uiState.customPrimaryColorHex), modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 5. Live Interactive Preview Card
+        Card(
+            colors = CardDefaults.cardColors(containerColor = FarasWhite),
+            shape = RoundedCornerShape(18.dp),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(uiState.customPrimaryColorHex)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = if (language == AppLanguage.ARABIC) "معاينة حية للمظهر الجديد 📱" else "Live Theme Preview 📱",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = FarasTextPrimary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(uiState.customBackgroundColorHex))
+                        .padding(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "FareScooter مصر 🛵",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(uiState.customPrimaryColorHex)
+                            )
+                            Text(
+                                text = "تخطي زحمة كوبري 6 أكتوبر فوراً",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = FarasTextPrimary
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(uiState.customPrimaryColorHex))
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "22.5 ج.م",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasWhite
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 6. Reset Defaults Button
+        OutlinedButton(
+            onClick = {
+                viewModel.resetThemeDefaults()
+                Toast.makeText(context, "تمت استعادة الألوان والخطوط الافتراضية بنجاح 🔄", Toast.LENGTH_SHORT).show()
+            },
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = FarasTextSecondary),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Icon(Icons.Default.Refresh, contentDescription = null, tint = FarasTextSecondary)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (language == AppLanguage.ARABIC) "استعادة الإعدادات الافتراضية للتطبيق" else "Reset Theme to Defaults",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+    }
+}
+

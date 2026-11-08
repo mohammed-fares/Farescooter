@@ -14,8 +14,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.AppLanguage
 import com.example.model.AiMarketingCampaign
+import com.example.model.AppFontFamily
 import com.example.model.Captain
 import com.example.model.CaptainNeedRequest
+import com.example.model.CaptainStatus
 import com.example.model.ChatMessage
 import com.example.model.ComplaintTicket
 import com.example.model.ContactInvite
@@ -33,6 +35,7 @@ import com.example.model.ServiceType
 import com.example.model.TripOrder
 import com.example.model.TripStatus
 import com.example.model.UserProfile
+import com.example.model.UserRole
 import com.example.model.WalletTransaction
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -121,10 +124,18 @@ data class FarascooterUiState(
     val pinnedYRatio: Float = 0.52f,
     val selectedNearbyScooter: ScooterLocation? = null,
 
-    // Auth & Permissions State
-    val isAuthCompleted: Boolean = true,
+    // User Role & Auth State
+    val currentUserRole: UserRole = UserRole.CUSTOMER,
+    val isAuthCompleted: Boolean = false,
     val hasPermissionsGranted: Boolean = true,
+    val registeredCaptain: Captain? = null,
     val userProfile: UserProfile = UserProfile(),
+
+    // Dynamic Theme & Typography Customization (Admin Configurable)
+    val customPrimaryColorHex: Long = 0xFF00B44A,
+    val customBackgroundColorHex: Long = 0xFFE7E8EA,
+    val selectedArabicFont: AppFontFamily = AppFontFamily.CAIRO,
+    val selectedEnglishFont: AppFontFamily = AppFontFamily.CAIRO,
 
     // Popups & Dialogs
     val showPaymentSheet: Boolean = false,
@@ -245,10 +256,10 @@ data class FarascooterUiState(
 
     // Captains in Egypt
     val captainsList: List<Captain> = listOf(
-        Captain("c1", "كابتن سيف الدين المصري", "01012345678", 4.96f, 1420, "ق هـ د 4192", "Xiaomi Pro Max Ultra (45 كم/س)", 0xFF00B44A, isVerified = true),
-        Captain("c2", "كابتن أحمد شحاتة", "01123456789", 4.91f, 890, "ج ي ر 8821", "Ninebot Segway GT2", 0xFF2563EB, isVerified = true),
-        Captain("c3", "كابتن كريم حسن", "01234567890", 4.88f, 740, "س ن م 3314", "Kaabo Mantis King", 0xFF00B44A, isVerified = true),
-        Captain("c4", "كابتن محمود إبراهيم (جديد)", "01545678901", 4.75f, 28, "ط ع ف 9901", "Dualtron Spider", 0xFFD97706, isVerified = false)
+        Captain("c1", "كابتن سيف الدين المصري", "01012345678", 4.96f, 1420, "ق هـ د 4192", "Xiaomi Pro Max Ultra (45 كم/س)", 0xFF00B44A, isVerified = true, status = CaptainStatus.APPROVED),
+        Captain("c2", "كابتن أحمد شحاتة", "01123456789", 4.91f, 890, "ج ي ر 8821", "Ninebot Segway GT2", 0xFF2563EB, isVerified = true, status = CaptainStatus.APPROVED),
+        Captain("c3", "كابتن كريم حسن", "01234567890", 4.88f, 740, "س ن م 3314", "Kaabo Mantis King", 0xFF00B44A, isVerified = true, status = CaptainStatus.PENDING),
+        Captain("c4", "كابتن محمود إبراهيم", "01545678901", 4.75f, 28, "ط ع ف 9901", "Dualtron Spider", 0xFFD97706, isVerified = false, status = CaptainStatus.SUSPENDED)
     ),
 
     // Captain Needs & Requests
@@ -284,7 +295,47 @@ data class FarascooterUiState(
     ),
 
     val sosIncidentLogs: List<SOSAlert> = emptyList(),
-    val tripHistory: List<TripOrder> = emptyList()
+    val tripHistory: List<TripOrder> = emptyList(),
+
+    // Real-Time Incoming Trip for Captain
+    val driverIncomingTrip: TripOrder? = null,
+
+    // Hidden Admin Entry State
+    val isSecretAdminAuthVisible: Boolean = false,
+
+    // Captain KYC Selfie Step in Auth/Profile
+    val isCaptainKycModalVisible: Boolean = false,
+    val isPerformingFaceMatch: Boolean = false,
+    val faceMatchProgress: Float = 0f,
+    val faceMatchSuccess: Boolean? = null,
+
+    // Captain Egyptian Payouts & History
+    val captainPayouts: List<CaptainPayoutRecord> = listOf(
+        CaptainPayoutRecord("po1", PayoutMethodType.INSTAPAY, "seif.masry@instapay", 350.0, "اليوم 09:30 ص", "تم التحويل بنجاح ✅", "IP-EG-99412"),
+        CaptainPayoutRecord("po2", PayoutMethodType.VODAFONE_CASH, "01012345678", 500.0, "أمس 04:15 م", "تم التحويل بنجاح ✅", "VC-EG-44182")
+    ),
+    val showCaptainPayoutSheet: Boolean = false,
+
+    // Admin Messages & Broadcasts for Captains
+    val adminCaptainMessages: List<AdminCaptainMessage> = listOf(
+        AdminCaptainMessage("msg1", "إدارة FareScooter", isBroadcast = true, title = "تحديث شروط السلامة وارتداء الخوذة", content = "يرجى من جميع كباتن القاهرة والجيزة التأكد من توفير خوذة الركاب المعقمة دائماً تجنباً لغرامات المرور والالتزام بالسرعة القانونية.", timestamp = "اليوم 08:00 ص")
+    ),
+
+    // Promo Codes & Targeted Discounts
+    val promoDiscounts: List<PromoDiscount> = listOf(
+        PromoDiscount("prm1", "OCTOBER30", 30, 45.0, isForAll = true, expiryDate = "30 نوفمبر", description = "خصم 30% لجميع العملاء لتخطي زحمة كوبري 6 أكتوبر"),
+        PromoDiscount("prm2", "VIP50", 50, 60.0, targetCustomerPhone = "01098765432", targetCustomerName = "محمد فاروق", isForAll = false, expiryDate = "15 نوفمبر", description = "خصم VIP مخصص للعميل الأكثر استخداماً")
+    ),
+    val appliedPromoDiscount: PromoDiscount? = null,
+    val promoErrorMessage: String? = null,
+
+    // Customers List with Suspension Governance
+    val customersList: List<CustomerRecord> = listOf(
+        CustomerRecord("cus1", "محمد فاروق", "01098765432", "mf.z.hussein.pal@gmail.com", 18, 4.95f, "نشط 🟢"),
+        CustomerRecord("cus2", "منى عبد الرحمن", "01188776655", "mona.abdelrahman@gmail.com", 26, 4.98f, "نشط 🟢"),
+        CustomerRecord("cus3", "كريم عادل الشريف", "01233441122", "karim.adel@yahoo.com", 5, 4.60f, "نشط 🟢"),
+        CustomerRecord("cus4", "طارق زهران", "01599887744", "tarek.zahran@hotmail.com", 2, 4.20f, "موقوف مؤقتاً ⏸️", suspensionInfo = SuspensionInfo(SuspensionType.SUSPENDED_3D, "تكرار إلغاء المشاوير دون مبرر", "2026-11-07", "2026-11-10", true))
+    )
 )
 
 class FarascooterViewModel(application: Application) : AndroidViewModel(application) {
@@ -340,12 +391,16 @@ class FarascooterViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     // Auth & Permissions
-    fun loginWithOtp(name: String, phone: String, email: String) {
+    // Role-Based Registration & Login
+    fun registerAsCustomer(name: String, phone: String, email: String) {
         _uiState.update {
             it.copy(
+                currentUserRole = UserRole.CUSTOMER,
+                currentMode = AppMode.CUSTOMER,
                 isAuthCompleted = true,
+                hasPermissionsGranted = true,
                 userProfile = it.userProfile.copy(
-                    name = name,
+                    name = name.ifBlank { "عميل FareScooter" },
                     phoneNumber = phone,
                     email = email,
                     isLoggedIn = true
@@ -354,8 +409,66 @@ class FarascooterViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun registerAsCaptain(
+        name: String,
+        phone: String,
+        email: String,
+        scooterModel: String,
+        plateNumber: String,
+        nationalId: String
+    ) {
+        val newCaptain = Captain(
+            id = "c_${System.currentTimeMillis()}",
+            name = name.ifBlank { "كابتن جديد" },
+            phone = phone,
+            rating = 5.0f,
+            totalRides = 0,
+            plateNumber = plateNumber.ifBlank { "س ك ت 101" },
+            scooterModel = scooterModel.ifBlank { "سكوتر كهربائي حديث" },
+            avatarColorHex = 0xFF00B44A,
+            isVerified = true,
+            status = CaptainStatus.APPROVED,
+            hasSanitizedHelmet = true,
+            nationalId = nationalId.ifBlank { "29801010101234" },
+            licenseStatus = "سارية (مرور القاهرة)",
+            criminalRecordClean = true
+        )
+        _uiState.update {
+            it.copy(
+                currentUserRole = UserRole.CAPTAIN,
+                currentMode = AppMode.CAPTAIN,
+                isAuthCompleted = true,
+                hasPermissionsGranted = true,
+                registeredCaptain = newCaptain,
+                captainsList = listOf(newCaptain) + it.captainsList
+            )
+        }
+    }
+
+    fun loginAsAdmin(username: String, pass: String): Boolean {
+        val u = username.trim()
+        val p = pass.trim()
+        val isValid = (u.equals("admin", ignoreCase = true) || u.isNotEmpty()) && (p.isNotEmpty())
+        if (isValid) {
+            _uiState.update {
+                it.copy(
+                    currentUserRole = UserRole.ADMIN,
+                    currentMode = AppMode.ADMIN,
+                    isAuthCompleted = true,
+                    hasPermissionsGranted = true
+                )
+            }
+            return true
+        }
+        return false
+    }
+
+    fun loginWithOtp(name: String, phone: String, email: String) {
+        registerAsCustomer(name, phone, email)
+    }
+
     fun skipAuthAsGuest() {
-        _uiState.update { it.copy(isAuthCompleted = true) }
+        registerAsCustomer("زائر FareScooter", "01000000000", "guest@farascooter.com")
     }
 
     fun completePermissions() {
@@ -366,6 +479,8 @@ class FarascooterViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.update {
             it.copy(
                 isAuthCompleted = false,
+                currentUserRole = UserRole.CUSTOMER,
+                currentMode = AppMode.CUSTOMER,
                 customerScreen = CustomerScreen.HOME
             )
         }
@@ -997,7 +1112,9 @@ class FarascooterViewModel(application: Application) : AndroidViewModel(applicat
             it.copy(
                 activeTrip = trip,
                 customerScreen = CustomerScreen.DISPATCHING,
-                dispatchCountdownSec = 30
+                dispatchCountdownSec = 30,
+                hasDriverIncomingOrder = true,
+                driverIncomingTrip = trip
             )
         }
 
@@ -1273,17 +1390,31 @@ class FarascooterViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun acceptDriverOrder() {
-        _uiState.update {
-            it.copy(
+        dispatchJob?.cancel()
+        val assignedCaptain = _uiState.value.registeredCaptain ?: _uiState.value.captainsList.first()
+        val trip = _uiState.value.driverIncomingTrip ?: _uiState.value.activeTrip
+        val fare = trip?.finalFare ?: 45.0
+
+        _uiState.update { state ->
+            val updatedTrip = (trip ?: state.activeTrip)?.copy(
+                status = TripStatus.ACCEPTED,
+                captain = assignedCaptain
+            )
+            state.copy(
                 hasDriverIncomingOrder = false,
-                driverTodayEarnings = it.driverTodayEarnings + 45.0,
-                driverCompletedCount = it.driverCompletedCount + 1
+                driverIncomingTrip = null,
+                driverTodayEarnings = state.driverTodayEarnings + fare,
+                driverCompletedCount = state.driverCompletedCount + 1,
+                activeTrip = updatedTrip,
+                customerScreen = CustomerScreen.LIVE_TRACKING,
+                captainProgressRatio = 0.1f
             )
         }
+        startTripProgressSimulation()
     }
 
     fun declineDriverOrder() {
-        _uiState.update { it.copy(hasDriverIncomingOrder = false) }
+        _uiState.update { it.copy(hasDriverIncomingOrder = false, driverIncomingTrip = null) }
     }
 
     // Admin & AI Marketing Suite
@@ -1336,9 +1467,317 @@ class FarascooterViewModel(application: Application) : AndroidViewModel(applicat
             estimatedReach = "${Random.nextInt(80, 250)},000 مستخدم مستهدف",
             createdTime = "الآن"
         )
+        _uiState.update { state ->
+            state.copy(aiMarketingCampaigns = listOf(newCampaign) + state.aiMarketingCampaigns)
+        }
+    }
 
+    fun setExactPickupAddress(address: String) {
+        _uiState.update { it.copy(exactPickupAddress = address) }
+    }
+
+    // Admin Captain Governance (الموافقة، الحظر، التوقيف المؤقت، التفعيل ومراقبة الأداء)
+    fun approveCaptain(captainId: String) {
+        _uiState.update { state ->
+            val updated = state.captainsList.map { c ->
+                if (c.id == captainId) c.copy(status = CaptainStatus.APPROVED, isVerified = true) else c
+            }
+            state.copy(captainsList = updated)
+        }
+    }
+
+    fun suspendCaptain(captainId: String) {
+        _uiState.update { state ->
+            val updated = state.captainsList.map { c ->
+                if (c.id == captainId) c.copy(status = CaptainStatus.SUSPENDED) else c
+            }
+            state.copy(captainsList = updated)
+        }
+    }
+
+    fun blockCaptain(captainId: String) {
+        _uiState.update { state ->
+            val updated = state.captainsList.map { c ->
+                if (c.id == captainId) c.copy(status = CaptainStatus.BLOCKED, isVerified = false) else c
+            }
+            state.copy(captainsList = updated)
+        }
+    }
+
+    fun reactivateCaptain(captainId: String) {
+        approveCaptain(captainId)
+    }
+
+    // Dynamic Theme Customization (Admin Controls)
+    fun setPrimaryColor(hex: Long) {
+        _uiState.update { it.copy(customPrimaryColorHex = hex) }
+    }
+
+    fun setBackgroundColor(hex: Long) {
+        _uiState.update { it.copy(customBackgroundColorHex = hex) }
+    }
+
+    fun setArabicFont(font: AppFontFamily) {
+        _uiState.update { it.copy(selectedArabicFont = font) }
+    }
+
+    fun setEnglishFont(font: AppFontFamily) {
+        _uiState.update { it.copy(selectedEnglishFont = font) }
+    }
+
+    fun resetThemeDefaults() {
         _uiState.update {
-            it.copy(aiMarketingCampaigns = listOf(newCampaign) + it.aiMarketingCampaigns)
+            it.copy(
+                customPrimaryColorHex = 0xFF00B44A,
+                customBackgroundColorHex = 0xFFE7E8EA,
+                selectedArabicFont = AppFontFamily.CAIRO,
+                selectedEnglishFont = AppFontFamily.CAIRO
+            )
+        }
+    }
+
+    // Hidden Admin Auth Dialog Toggle
+    fun toggleSecretAdminAuthDialog(show: Boolean) {
+        _uiState.update { it.copy(isSecretAdminAuthVisible = show) }
+    }
+
+    // Captain Payouts (InstaPay, Vodafone Cash, Bank, Meeza, Fawry)
+    fun toggleCaptainPayoutSheet(show: Boolean) {
+        _uiState.update { it.copy(showCaptainPayoutSheet = show) }
+    }
+
+    fun requestCaptainPayout(method: PayoutMethodType, destination: String, amount: Double): Boolean {
+        if (_uiState.value.driverTodayEarnings < amount || amount <= 0) return false
+        val ref = "FS-PO-${Random.nextInt(10000, 99999)}"
+        val payout = CaptainPayoutRecord(
+            id = "po_${System.currentTimeMillis()}",
+            method = method,
+            destinationDetails = destination,
+            amountEgp = amount,
+            date = "اليوم " + SimpleDateFormat("hh:mm a", Locale("ar", "EG")).format(Date()),
+            status = "تم التحويل اللحظي بنجاح ✅",
+            referenceNumber = ref
+        )
+        _uiState.update { state ->
+            state.copy(
+                driverTodayEarnings = state.driverTodayEarnings - amount,
+                captainPayouts = listOf(payout) + state.captainPayouts
+            )
+        }
+        return true
+    }
+
+    // Captain KYC Selfie & National ID Matching
+    fun toggleCaptainKycModal(show: Boolean) {
+        _uiState.update {
+            it.copy(
+                isCaptainKycModalVisible = show,
+                isPerformingFaceMatch = false,
+                faceMatchSuccess = null,
+                faceMatchProgress = 0f
+            )
+        }
+    }
+
+    fun startLiveSelfieFaceMatch(captainId: String? = null) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isPerformingFaceMatch = true, faceMatchProgress = 0f, faceMatchSuccess = null) }
+            for (i in 1..10) {
+                delay(180)
+                _uiState.update { it.copy(faceMatchProgress = i * 0.1f) }
+            }
+            val matchScore = Random.nextInt(96, 99)
+            _uiState.update { state ->
+                val capId = captainId ?: state.registeredCaptain?.id ?: state.captainsList.first().id
+                val updatedCaptains = state.captainsList.map { c ->
+                    if (c.id == capId) {
+                        c.copy(
+                            isVerified = true,
+                            kycVerification = CaptainKycVerification(
+                                isVerified = true,
+                                selfieSubmitted = true,
+                                nationalIdSubmitted = true,
+                                faceMatchScore = matchScore,
+                                verificationTimestamp = "اليوم"
+                            )
+                        )
+                    } else c
+                }
+                val regCap = state.registeredCaptain?.copy(
+                    isVerified = true,
+                    kycVerification = CaptainKycVerification(
+                        isVerified = true,
+                        selfieSubmitted = true,
+                        nationalIdSubmitted = true,
+                        faceMatchScore = matchScore,
+                        verificationTimestamp = "اليوم"
+                    )
+                )
+                state.copy(
+                    isPerformingFaceMatch = false,
+                    faceMatchSuccess = true,
+                    captainsList = updatedCaptains,
+                    registeredCaptain = regCap
+                )
+            }
+        }
+    }
+
+    // Admin Captain Messaging (Private to single captain or Broadcast)
+    fun sendAdminMessage(
+        targetCaptainId: String?,
+        isBroadcast: Boolean,
+        title: String,
+        content: String
+    ) {
+        val targetName = if (!isBroadcast && targetCaptainId != null) {
+            _uiState.value.captainsList.find { it.id == targetCaptainId }?.name
+        } else null
+
+        val newMsg = AdminCaptainMessage(
+            id = "msg_${System.currentTimeMillis()}",
+            senderAdmin = "إدارة FareScooter",
+            targetCaptainId = targetCaptainId,
+            targetCaptainName = targetName,
+            isBroadcast = isBroadcast,
+            title = title,
+            content = content,
+            timestamp = "الآن"
+        )
+        _uiState.update { state ->
+            state.copy(adminCaptainMessages = listOf(newMsg) + state.adminCaptainMessages)
+        }
+    }
+
+    // Promo Discounts Management
+    fun createPromoDiscount(
+        code: String,
+        percentage: Int,
+        maxDiscount: Double,
+        targetPhone: String?,
+        isForAll: Boolean,
+        expiryDate: String,
+        description: String
+    ) {
+        val targetCustomer = if (!isForAll && !targetPhone.isNullOrBlank()) {
+            _uiState.value.customersList.find { it.phone == targetPhone }
+        } else null
+
+        val promo = PromoDiscount(
+            id = "prm_${System.currentTimeMillis()}",
+            code = code.trim().uppercase(),
+            percentage = percentage,
+            maxDiscountEgp = maxDiscount,
+            targetCustomerPhone = targetPhone,
+            targetCustomerName = targetCustomer?.name,
+            isForAll = isForAll,
+            expiryDate = expiryDate,
+            description = description
+        )
+        _uiState.update { state ->
+            state.copy(promoDiscounts = listOf(promo) + state.promoDiscounts)
+        }
+    }
+
+    fun applyPromoDiscount(code: String): Boolean {
+        val clean = code.trim().uppercase()
+        val found = _uiState.value.promoDiscounts.find { it.code == clean }
+        if (found != null) {
+            val userPhone = _uiState.value.userProfile.phoneNumber
+            if (!found.isForAll && found.targetCustomerPhone != userPhone) {
+                _uiState.update { it.copy(promoErrorMessage = "هذا الكود مخصص لعميل آخر فقط") }
+                return false
+            }
+            _uiState.update { it.copy(appliedPromoDiscount = found, promoErrorMessage = null) }
+            return true
+        } else {
+            _uiState.update { it.copy(promoErrorMessage = "كود الخصم غير صحيح أو منتهي الصلاحية") }
+            return false
+        }
+    }
+
+    fun removeAppliedPromoDiscount() {
+        _uiState.update { it.copy(appliedPromoDiscount = null, promoErrorMessage = null) }
+    }
+
+    // Duration-based & Date-Range Suspension for Captains
+    fun suspendCaptainWithDuration(
+        captainId: String,
+        type: SuspensionType,
+        reason: String,
+        fromDate: String,
+        untilDate: String
+    ) {
+        val isPerm = type == SuspensionType.PERMANENT_BLOCK
+        val newStatus = if (isPerm) CaptainStatus.BLOCKED else CaptainStatus.SUSPENDED
+        val info = SuspensionInfo(
+            type = type,
+            reason = reason,
+            fromDate = fromDate,
+            untilDate = untilDate,
+            isActive = true
+        )
+        _uiState.update { state ->
+            val updated = state.captainsList.map { c ->
+                if (c.id == captainId) c.copy(status = newStatus, suspensionInfo = info, isVerified = !isPerm) else c
+            }
+            state.copy(captainsList = updated)
+        }
+    }
+
+    fun liftCaptainSuspension(captainId: String) {
+        _uiState.update { state ->
+            val updated = state.captainsList.map { c ->
+                if (c.id == captainId) c.copy(status = CaptainStatus.APPROVED, suspensionInfo = null, isVerified = true) else c
+            }
+            state.copy(captainsList = updated)
+        }
+    }
+
+    // Duration-based & Date-Range Suspension for Customers
+    fun suspendCustomerWithDuration(
+        phone: String,
+        type: SuspensionType,
+        reason: String,
+        fromDate: String,
+        untilDate: String
+    ) {
+        val info = SuspensionInfo(
+            type = type,
+            reason = reason,
+            fromDate = fromDate,
+            untilDate = untilDate,
+            isActive = true
+        )
+        val statusStr = if (type == SuspensionType.PERMANENT_BLOCK) "محظور نهائياً 🚫" else "موقوف مؤقتاً ⏸️"
+        _uiState.update { state ->
+            val updatedCustomers = state.customersList.map { cust ->
+                if (cust.phone == phone) cust.copy(status = statusStr, suspensionInfo = info) else cust
+            }
+            val updatedProfile = if (state.userProfile.phoneNumber == phone) {
+                state.userProfile.copy(suspensionInfo = info)
+            } else state.userProfile
+
+            state.copy(
+                customersList = updatedCustomers,
+                userProfile = updatedProfile
+            )
+        }
+    }
+
+    fun liftCustomerSuspension(phone: String) {
+        _uiState.update { state ->
+            val updatedCustomers = state.customersList.map { cust ->
+                if (cust.phone == phone) cust.copy(status = "نشط 🟢", suspensionInfo = null) else cust
+            }
+            val updatedProfile = if (state.userProfile.phoneNumber == phone) {
+                state.userProfile.copy(suspensionInfo = null)
+            } else state.userProfile
+
+            state.copy(
+                customersList = updatedCustomers,
+                userProfile = updatedProfile
+            )
         }
     }
 }

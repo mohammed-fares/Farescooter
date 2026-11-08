@@ -42,6 +42,53 @@ data class ScooterLocation(
     val captainName: String
 )
 
+enum class CaptainStatus {
+    APPROVED,
+    PENDING,
+    SUSPENDED,
+    BLOCKED
+}
+
+enum class SuspensionType {
+    NONE,
+    SUSPENDED_24H,
+    SUSPENDED_3D,
+    SUSPENDED_7D,
+    SUSPENDED_CUSTOM_RANGE,
+    PERMANENT_BLOCK
+}
+
+data class SuspensionInfo(
+    val type: SuspensionType = SuspensionType.NONE,
+    val reason: String = "",
+    val fromDate: String = "",
+    val untilDate: String = "",
+    val isActive: Boolean = false
+)
+
+data class CaptainKycVerification(
+    val isVerified: Boolean = false,
+    val selfieSubmitted: Boolean = false,
+    val nationalIdSubmitted: Boolean = false,
+    val faceMatchScore: Int = 98,
+    val verificationTimestamp: String = "2026-11-08"
+)
+
+enum class UserRole {
+    CUSTOMER,
+    CAPTAIN,
+    ADMIN
+}
+
+enum class AppFontFamily(val displayNameAr: String, val displayNameEn: String) {
+    CAIRO("خط كايرو (Cairo)", "Cairo"),
+    TAJAWAL("خط تجوال (Tajawal)", "Tajawal"),
+    ALMARAI("خط المراعي (Almarai)", "Almarai"),
+    INTER("خط إنتر (Inter)", "Inter"),
+    ROBOTO("خط روبوتو (Roboto)", "Roboto"),
+    SYSTEM_DEFAULT("خط النظام الافتراضي", "System Default")
+}
+
 data class Captain(
     val id: String,
     val name: String,
@@ -52,10 +99,13 @@ data class Captain(
     val scooterModel: String,
     val avatarColorHex: Long = 0xFF00B44A,
     val isVerified: Boolean = true,
+    val status: CaptainStatus = CaptainStatus.APPROVED,
     val hasSanitizedHelmet: Boolean = true,
     val nationalId: String = "29408150102938",
     val licenseStatus: String = "سارية (مرور الجيزة)",
-    val criminalRecordClean: Boolean = true
+    val criminalRecordClean: Boolean = true,
+    val suspensionInfo: SuspensionInfo? = null,
+    val kycVerification: CaptainKycVerification = CaptainKycVerification(isVerified = true, selfieSubmitted = true, nationalIdSubmitted = true)
 )
 
 data class SavedCard(
@@ -98,7 +148,8 @@ data class UserProfile(
     val isLoggedIn: Boolean = true,
     val referralCode: String = "FARE50",
     val referralEarningsEgp: Double = 150.0,
-    val completedRidesCount: Int = 18
+    val completedRidesCount: Int = 18,
+    val suspensionInfo: SuspensionInfo? = null
 )
 
 data class CaptainNeedRequest(
@@ -216,3 +267,57 @@ data class TripOrder(
     val actualDurationSeconds: Int = 0,
     val complaint: ComplaintTicket? = null
 )
+
+data class CustomerRecord(
+    val id: String,
+    val name: String,
+    val phone: String,
+    val email: String,
+    val totalRides: Int = 14,
+    val rating: Float = 4.9f,
+    val status: String = "نشط 🟢",
+    val suspensionInfo: SuspensionInfo? = null
+)
+
+enum class PayoutMethodType(val titleAr: String, val titleEn: String) {
+    INSTAPAY("إنستاباي (InstaPay)", "InstaPay"),
+    VODAFONE_CASH("محفظة إلكترونية (فودافون كاش / وي / أورنج / إي آند)", "Mobile Wallet (Vodafone Cash)"),
+    BANK_ACCOUNT("تحويل بنكي مصري (IBAN)", "Bank Transfer (IBAN)"),
+    MEEZA_CARD("بطاقة ميزة / فيزا", "Meeza / Visa Card"),
+    FAWRY_AMAN("كود صرف نقدي (فوري / أمان)", "Cash Payout (Fawry / Aman)")
+}
+
+data class CaptainPayoutRecord(
+    val id: String,
+    val method: PayoutMethodType,
+    val destinationDetails: String,
+    val amountEgp: Double,
+    val date: String,
+    val status: String = "تم التحويل بنجاح ✅",
+    val referenceNumber: String
+)
+
+data class AdminCaptainMessage(
+    val id: String,
+    val senderAdmin: String = "إدارة FareScooter",
+    val targetCaptainId: String? = null,
+    val targetCaptainName: String? = null,
+    val isBroadcast: Boolean = true,
+    val title: String,
+    val content: String,
+    val timestamp: String,
+    var isRead: Boolean = false
+)
+
+data class PromoDiscount(
+    val id: String,
+    val code: String,
+    val percentage: Int,
+    val maxDiscountEgp: Double,
+    val targetCustomerPhone: String? = null,
+    val targetCustomerName: String? = null,
+    val isForAll: Boolean = true,
+    val expiryDate: String,
+    val description: String
+)
+

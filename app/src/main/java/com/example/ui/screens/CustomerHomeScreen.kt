@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Call
@@ -34,7 +35,9 @@ import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocalMall
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Money
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
@@ -51,9 +54,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -247,8 +258,15 @@ fun CustomerHomeScreen(
                 .fillMaxWidth()
         ) {
             when (uiState.customerScreen) {
-                CustomerScreen.HOME, CustomerScreen.SEARCH_DESTINATION -> {
+                CustomerScreen.HOME -> {
                     CustomerHomeControlsSheet(
+                        uiState = uiState,
+                        viewModel = viewModel
+                    )
+                }
+
+                CustomerScreen.SEARCH_DESTINATION -> {
+                    SearchDestinationSheet(
                         uiState = uiState,
                         viewModel = viewModel
                     )
@@ -392,80 +410,13 @@ private fun CustomerHomeControlsSheet(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            // Exact Pickup Spot Card (Customer can pin location)
+            // 1. Prominent First Option: "Where to?" (إلى أين تريد الذهاب؟)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(FarasNeonGreenLight)
-                    .border(1.dp, FarasNeonGreen.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-                    .clickable { viewModel.pinCurrentLocationGps() }
-                    .padding(horizontal = 14.dp, vertical = 12.dp)
-                    .testTag("pin_location_btn")
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = "Pin Location",
-                            tint = FarasNeonGreenDark,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = AppStrings.get("pin_my_location", language),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = FarasNeonGreenDark
-                            )
-                            Text(
-                                text = uiState.exactPickupAddress,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = FarasTextPrimary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(FarasNeonGreen)
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        if (uiState.isDetectingGpsLocation) {
-                            CircularProgressIndicator(
-                                color = FarasWhite,
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(
-                                text = "تحديث 📍",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = FarasWhite
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Uber-Style "Where to?" Search Bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(18.dp))
                     .background(FarasLightGreyBg)
-                    .border(1.dp, FarasCardBorder, RoundedCornerShape(16.dp))
+                    .border(1.5.dp, FarasNeonGreen, RoundedCornerShape(18.dp))
                     .clickable { viewModel.setCustomerScreen(CustomerScreen.SEARCH_DESTINATION) }
                     .padding(horizontal = 16.dp, vertical = 14.dp)
                     .testTag("where_to_search_bar")
@@ -475,39 +426,56 @@ private fun CustomerHomeControlsSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = FarasNeonGreen,
-                            modifier = Modifier.size(22.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape)
+                                .background(FarasNeonGreenLight),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = FarasNeonGreenDark,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = AppStrings.get("where_to", language),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = FarasTextPrimary
-                        )
+                        Column {
+                            Text(
+                                text = AppStrings.get("where_to", language),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "اختر وجهتك وانطلق بسكوتر فوري لتفادي الزحام" else "Choose destination & bypass traffic instantly",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = FarasTextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
 
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(FarasNeonGreenLight)
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                            .background(FarasNeonGreen)
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
                         Text(
-                            text = "سكوتر متاح 🛵",
+                            text = if (language == AppLanguage.ARABIC) "انطلق 🛵" else "Go 🛵",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = FarasNeonGreenDark
+                            color = FarasWhite
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // The Three Core Services Grid (Ride, Send Package, Buy & Get)
             Text(
@@ -1471,6 +1439,252 @@ private fun LiveTrackingSheet(
                             color = FarasTextPrimary
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchDestinationSheet(
+    uiState: FarascooterUiState,
+    viewModel: FarascooterViewModel
+) {
+    val language = uiState.language
+    var searchQuery by remember { mutableStateOf("") }
+    var pickupInput by remember(uiState.exactPickupAddress) { mutableStateOf(uiState.exactPickupAddress) }
+    val scrollState = rememberScrollState()
+
+    val filteredPlaces = remember(searchQuery, uiState.popularPlaces, language) {
+        if (searchQuery.isBlank()) {
+            uiState.popularPlaces
+        } else {
+            uiState.popularPlaces.filter {
+                it.nameAr.contains(searchQuery, ignoreCase = true) ||
+                it.nameEn.contains(searchQuery, ignoreCase = true) ||
+                it.addressAr.contains(searchQuery, ignoreCase = true) ||
+                it.addressEn.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+
+    Surface(
+        color = FarasWhite,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shadowElevation = 8.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+                .verticalScroll(scrollState)
+        ) {
+            // Drag Handle
+            Box(
+                modifier = Modifier
+                    .width(42.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(FarasCardBorder)
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Header with Back button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = { viewModel.setCustomerScreen(CustomerScreen.HOME) },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = FarasTextPrimary
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (language == AppLanguage.ARABIC) "تحديد مسار المشوار" else "Select Route",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = FarasTextPrimary
+                    )
+                }
+
+                IconButton(
+                    onClick = { viewModel.setCustomerScreen(CustomerScreen.HOME) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = FarasTextSecondary)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // 1. Pickup Location Section
+            Card(
+                colors = CardDefaults.cardColors(containerColor = FarasLightGreyBg),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, FarasCardBorder),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.MyLocation, contentDescription = null, tint = FarasNeonGreenDark, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "نقطة الانطلاق (مكانك)" else "Pickup Location",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasNeonGreenDark
+                            )
+                        }
+
+                        TextButton(
+                            onClick = { viewModel.pinCurrentLocationGps() },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            if (uiState.isDetectingGpsLocation) {
+                                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = FarasNeonGreenDark)
+                            } else {
+                                Text(
+                                    text = if (language == AppLanguage.ARABIC) "📍 تحديث GPS" else "📍 GPS",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = FarasNeonGreenDark
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    OutlinedTextField(
+                        value = pickupInput,
+                        onValueChange = {
+                            pickupInput = it
+                            viewModel.setExactPickupAddress(it)
+                        },
+                        placeholder = { Text(if (language == AppLanguage.ARABIC) "حدد مكان الانطلاق" else "Pickup location") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = FarasWhite,
+                            unfocusedContainerColor = FarasWhite,
+                            focusedBorderColor = FarasNeonGreen,
+                            unfocusedBorderColor = FarasCardBorder
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { viewModel.setMapPinTarget(MapPinTarget.PICKUP) }) {
+                                Icon(Icons.Default.Map, contentDescription = "Pin on Map", tint = FarasNeonGreenDark)
+                            }
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 2. Destination Location Section
+            Card(
+                colors = CardDefaults.cardColors(containerColor = FarasWhite),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.5.dp, FarasNeonGreen),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = FarasAmber, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "إلى أين تريد الذهاب؟ (الوجهة)" else "Where to? (Destination)",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                        }
+
+                        TextButton(
+                            onClick = { viewModel.setMapPinTarget(MapPinTarget.DESTINATION) },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = if (language == AppLanguage.ARABIC) "🗺️ اختيار على الخريطة" else "🗺️ Pick on Map",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasNeonGreenDark
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text(if (language == AppLanguage.ARABIC) "ابحث عن مكان، مول، ميدان، جامعة..." else "Search destination...") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Search, contentDescription = "Search", tint = FarasNeonGreen)
+                        },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = FarasTextSecondary)
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = FarasLightGreyBg,
+                            unfocusedContainerColor = FarasLightGreyBg,
+                            focusedBorderColor = FarasNeonGreen,
+                            unfocusedBorderColor = FarasCardBorder
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = if (language == AppLanguage.ARABIC) "أماكن مقترحة في القاهرة والجيزة" else "Popular Destinations in Cairo & Giza",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = FarasTextSecondary
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                filteredPlaces.forEach { place ->
+                    PlaceRowItemLight(
+                        place = place,
+                        language = language,
+                        onClick = {
+                            viewModel.selectDestination(place)
+                        }
+                    )
                 }
             }
         }

@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.data.AppLanguage
 import com.example.data.AppStrings
+import com.example.model.UserRole
+import com.example.ui.theme.FarasAmber
 import com.example.ui.theme.FarasCardBorder
 import com.example.ui.theme.FarasLightGreyBg
 import com.example.ui.theme.FarasNeonGreen
@@ -47,6 +49,7 @@ import com.example.viewmodel.AppMode
 @Composable
 fun FarascooterTopBar(
     currentMode: AppMode,
+    userRole: UserRole,
     language: AppLanguage,
     onModeSelected: (AppMode) -> Unit,
     onProfileClicked: () -> Unit,
@@ -64,7 +67,7 @@ fun FarascooterTopBar(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            // Top Row: Brand Logo & Title + Profile Shortcut (No Country Name, No Flag, No Balance pill in header)
+            // Header Row: Brand Logo & Title + Profile Shortcut
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -72,18 +75,27 @@ fun FarascooterTopBar(
             ) {
                 // Logo & Brand Name: FareScooter
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { onModeSelected(AppMode.CUSTOMER) }
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(FarasNeonGreen),
+                            .background(
+                                when (userRole) {
+                                    UserRole.CAPTAIN -> FarasAmber
+                                    UserRole.ADMIN -> FarasTextPrimary
+                                    else -> FarasNeonGreen
+                                }
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ElectricScooter,
+                            imageVector = when (userRole) {
+                                UserRole.CAPTAIN -> Icons.Default.TwoWheeler
+                                UserRole.ADMIN -> Icons.Default.AdminPanelSettings
+                                else -> Icons.Default.ElectricScooter
+                            },
                             contentDescription = "FareScooter Logo",
                             tint = FarasWhite,
                             modifier = Modifier.size(24.dp)
@@ -91,14 +103,49 @@ fun FarascooterTopBar(
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = AppStrings.get("app_name", language),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = FarasTextPrimary
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            // Badge indicating User Role
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(
+                                        when (userRole) {
+                                            UserRole.CAPTAIN -> FarasAmber.copy(alpha = 0.15f)
+                                            UserRole.ADMIN -> FarasTextPrimary.copy(alpha = 0.12f)
+                                            else -> FarasNeonGreen.copy(alpha = 0.15f)
+                                        }
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = when (userRole) {
+                                        UserRole.CAPTAIN -> if (language == AppLanguage.ARABIC) "كابتن سكوتر 🛵" else "Captain 🛵"
+                                        UserRole.ADMIN -> if (language == AppLanguage.ARABIC) "لوحة الإدارة 🔐" else "Admin 🔐"
+                                        else -> if (language == AppLanguage.ARABIC) "تطبيق العميل 👤" else "Customer 👤"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = when (userRole) {
+                                        UserRole.CAPTAIN -> FarasAmber
+                                        UserRole.ADMIN -> FarasTextPrimary
+                                        else -> FarasNeonGreen
+                                    }
+                                )
+                            }
+                        }
                         Text(
-                            text = AppStrings.get("app_name", language),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = FarasTextPrimary
-                        )
-                        Text(
-                            text = if (language == AppLanguage.ARABIC) "توصيل ورحلات ذكية" else "Smart Scooter Rides & Delivery",
+                            text = when (userRole) {
+                                UserRole.CAPTAIN -> if (language == AppLanguage.ARABIC) "بوابة استقبال المشاوير والأرباح" else "Captain Rides & Earnings Portal"
+                                UserRole.ADMIN -> if (language == AppLanguage.ARABIC) "التحكم الشامل بالكباتن والمظهر" else "Full Captain Governance & Theme"
+                                else -> if (language == AppLanguage.ARABIC) "أسرع وسيلة لتفادي الزحام في مصر" else "Fastest way to skip Cairo traffic"
+                            },
                             style = MaterialTheme.typography.labelSmall,
                             color = FarasTextSecondary
                         )
@@ -123,38 +170,39 @@ fun FarascooterTopBar(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Navigation Mode Tabs: Customer, Captain, Admin (No Web Portal)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(FarasSurfaceVariant)
-                    .padding(3.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                ModeTabPill(
-                    title = AppStrings.get("role_customer", language),
-                    icon = Icons.Default.ElectricScooter,
-                    isSelected = currentMode == AppMode.CUSTOMER,
-                    modifier = Modifier.weight(1f),
-                    onClick = { onModeSelected(AppMode.CUSTOMER) }
-                )
-                ModeTabPill(
-                    title = AppStrings.get("role_captain", language),
-                    icon = Icons.Default.TwoWheeler,
-                    isSelected = currentMode == AppMode.CAPTAIN,
-                    modifier = Modifier.weight(1f),
-                    onClick = { onModeSelected(AppMode.CAPTAIN) }
-                )
-                ModeTabPill(
-                    title = AppStrings.get("role_admin", language),
-                    icon = Icons.Default.AdminPanelSettings,
-                    isSelected = currentMode == AppMode.ADMIN,
-                    modifier = Modifier.weight(1f),
-                    onClick = { onModeSelected(AppMode.ADMIN) }
-                )
+            // Only ADMIN gets the mode switcher tabs to monitor Customer, Captain, and Admin
+            if (userRole == UserRole.ADMIN) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(FarasSurfaceVariant)
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    ModeTabPill(
+                        title = AppStrings.get("role_customer", language),
+                        icon = Icons.Default.ElectricScooter,
+                        isSelected = currentMode == AppMode.CUSTOMER,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onModeSelected(AppMode.CUSTOMER) }
+                    )
+                    ModeTabPill(
+                        title = AppStrings.get("role_captain", language),
+                        icon = Icons.Default.TwoWheeler,
+                        isSelected = currentMode == AppMode.CAPTAIN,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onModeSelected(AppMode.CAPTAIN) }
+                    )
+                    ModeTabPill(
+                        title = AppStrings.get("role_admin", language),
+                        icon = Icons.Default.AdminPanelSettings,
+                        isSelected = currentMode == AppMode.ADMIN,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onModeSelected(AppMode.ADMIN) }
+                    )
+                }
             }
         }
     }
